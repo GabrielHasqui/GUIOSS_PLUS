@@ -13,6 +13,9 @@ from apps.users.models import UserRole
 
 class EvaluationVisibilitySelectorTests(TestCase):
     def setUp(self):
+        Factor.objects.all().delete()
+        Dimension.objects.all().delete()
+
         User = get_user_model()
         self.admin = User.objects.create_user(
             username="admin",

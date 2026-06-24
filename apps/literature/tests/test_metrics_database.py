@@ -23,6 +23,9 @@ from apps.literature.services import recalculate_suggested_importance_from_evide
 
 class SuggestedImportanceEvidenceTests(TestCase):
     def setUp(self):
+        Factor.objects.all().delete()
+        Dimension.objects.all().delete()
+
         user = User.objects.create_user(username="literature-user")
         dimension = Dimension.objects.create(name="Tecnologica")
         self.factor = Factor.objects.create(

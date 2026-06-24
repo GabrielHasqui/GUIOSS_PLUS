@@ -12,6 +12,9 @@ from apps.literature.services import calculate_scopus_suggested_importance_for_e
 
 class LiteratureNormalizationTests(TestCase):
     def setUp(self):
+        Factor.objects.all().delete()
+        Dimension.objects.all().delete()
+
         self.user = User.objects.create_user(
             username="tester",
             email="tester@example.com",

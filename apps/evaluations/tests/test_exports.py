@@ -18,6 +18,9 @@ from apps.evaluations.models import (
 
 class EvaluationPdfExportTests(TestCase):
     def setUp(self):
+        Factor.objects.all().delete()
+        Dimension.objects.all().delete()
+
         self.user = User.objects.create_user(
             username="gabri",
             email="gabri@example.com",

@@ -135,13 +135,14 @@ class AdminUserCreateForm(forms.Form):
             is_staff=False,
             is_superuser=False,
         )
-        UserProfile.objects.update_or_create(
+        profile, _ = UserProfile.objects.update_or_create(
             user=user,
             defaults={
                 "role": role,
                 "must_change_password": True,  # nosec B105
             },
         )
+        user.profile = profile
         return user
 
 
