@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil | GUIOS+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-[108rem] space-y-6 p-4 sm:p-6 lg:px-10">
+  <div>
+    <h2 class="text-2xl font-semibold text-guios-text">Perfil de usuario</h2>
+    <p class="mt-1 text-sm text-guios-muted">Datos de cuenta, actividad y opciones de seguridad.</p>
+  </div>
+
+  <section class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
+    <div class="bg-guios-navy p-6">
+      <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-4">
+          <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-guios-orange text-xl font-bold text-white">
+            {{ request.user.username|slice:":2"|upper }}
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-white">
+              {{ request.user.get_full_name|default:request.user.username }}
+            </h3>
+            <p class="mt-1 text-sm text-white/75">{% if request.user.email %}{{ request.user.email }}{% else %}Sin correo registrado{% endif %}</p>
+          </div>
+        </div>
+        <div class="text-left text-sm text-white/75 sm:text-right">
+          <div class="font-medium text-white">{{ request.user.profile.get_role_display|default:"Evaluador" }}</div>
+          <div>{% if request.user.is_active %}Cuenta activa{% else %}Cuenta inactiva{% endif %}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-0 border-t border-guios-border md:grid-cols-4">
+      <div class="border-b border-guios-border p-5 md:border-b-0 md:border-r">
+        <div class="text-sm text-guios-muted">Evaluaciones creadas</div>
+        <div class="mt-1 text-3xl font-bold text-guios-navy">{{ user_evaluations_count }}</div>
+      </div>
+      <div class="border-b border-guios-border p-5 md:border-b-0 md:border-r">
+        <div class="text-sm text-guios-muted">Completadas</div>
+        <div class="mt-1 text-3xl font-bold text-green-700">{{ completed_evaluations_count }}</div>
+      </div>
+      <div class="border-b border-guios-border p-5 md:border-b-0 md:border-r">
+        <div class="text-sm text-guios-muted">En proceso</div>
+        <div class="mt-1 text-3xl font-bold text-guios-orange">{{ in_progress_evaluations_count }}</div>
+      </div>
+      <div class="p-5">
+        <div class="text-sm text-guios-muted">Software evaluados</div>
+        <div class="mt-1 text-3xl font-bold text-pink-700">{{ software_count }}</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+    <section class="rounded-lg border border-guios-border bg-white shadow-sm">
+      <div class="border-b border-guios-border p-5">
+        <h3 class="text-lg font-semibold text-guios-text">Datos de cuenta</h3>
+        <p class="mt-1 text-sm text-guios-muted">Informacion administrativa asociada al acceso.</p>
+      </div>
+      <dl class="divide-y divide-guios-border text-sm">
+        <div class="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[180px_1fr]">
+          <dt class="text-guios-muted">Usuario</dt>
+          <dd class="font-medium text-guios-text">{{ request.user.username }}</dd>
+        </div>
+        <div class="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[180px_1fr]">
+          <dt class="text-guios-muted">Nombre completo</dt>
+          <dd class="font-medium text-guios-text">{{ request.user.get_full_name|default:"-" }}</dd>
+        </div>
+        <div class="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[180px_1fr]">
+          <dt class="text-guios-muted">Correo electronico</dt>
+          <dd class="font-medium text-guios-text">{% if request.user.email %}{{ request.user.email }}{% else %}-{% endif %}</dd>
+        </div>
+        <div class="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[180px_1fr]">
+          <dt class="text-guios-muted">Rol</dt>
+          <dd class="font-medium text-guios-text">{{ request.user.profile.get_role_display|default:"Evaluador" }}</dd>
+        </div>
+        <div class="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[180px_1fr]">
+          <dt class="text-guios-muted">Fecha de registro</dt>
+          <dd class="font-medium text-guios-text">{{ request.user.date_joined|date:"d/m/Y H:i" }}</dd>
+        </div>
+        <div class="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[180px_1fr]">
+          <dt class="text-guios-muted">Ultimo acceso</dt>
+          <dd class="font-medium text-guios-text">{% if request.user.last_login %}{{ request.user.last_login|date:"d/m/Y H:i" }}{% else %}-{% endif %}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="rounded-lg border border-guios-border bg-white shadow-sm">
+      <div class="border-b border-guios-border p-5">
+        <h3 class="text-lg font-semibold text-guios-text">Acciones de cuenta</h3>
+        <p class="mt-1 text-sm text-guios-muted">Gestiona tus datos y seguridad sin salir del perfil.</p>
+      </div>
+      <div class="space-y-4 p-5">
+        <div class="rounded-lg border border-guios-border p-4">
+          <h4 class="font-semibold text-guios-text">Datos personales</h4>
+          <p class="mt-1 text-sm text-guios-muted">Actualiza nombre y apellido.</p>
+          <button class="mt-4 rounded-md bg-guios-orange px-5 py-2.5 text-sm font-medium text-white hover:opacity-90" type="button" data-modal-open="profile-edit-modal">
+            Actualizar datos
+          </button>
+        </div>
+        <div class="rounded-lg border border-guios-border p-4">
+          <h4 class="font-semibold text-guios-text">Seguridad</h4>
+          <p class="mt-1 text-sm text-guios-muted">Cambia tu contrasena de acceso al sistema.</p>
+          <button class="mt-4 rounded-md border border-guios-border px-5 py-2.5 text-sm text-guios-text hover:bg-guios-surface" type="button" data-modal-open="password-change-modal">
+            Cambiar contrasena
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="rounded-lg border border-guios-border bg-white shadow-sm">
+    <div class="border-b border-guios-border p-5">
+      <h3 class="text-lg font-semibold text-guios-text">Actividad reciente</h3>
+      <p class="mt-1 text-sm text-guios-muted">Resumen de las evaluaciones asociadas a tu cuenta.</p>
+    </div>
+    <div class="grid grid-cols-1 gap-4 p-5 lg:grid-cols-2">
+      <div class="rounded-lg border border-guios-border p-4">
+        <div class="text-sm text-guios-muted">Evaluacion activa</div>
+        {% if active_user_evaluation %}
+          <div class="mt-2 font-semibold text-guios-text">{{ active_user_evaluation.software_name }}</div>
+          <div class="text-sm text-guios-muted">{{ active_user_evaluation.context }} · {{ active_user_evaluation.get_status_display }}</div>
+          <a class="mt-4 inline-block rounded-md bg-guios-orange px-4 py-2 text-sm text-white hover:opacity-90" href="{% url 'factors' active_user_evaluation.id %}">
+            Continuar
+          </a>
+        {% else %}
+          <p class="mt-2 text-sm text-guios-muted">No tienes evaluaciones activas pendientes.</p>
+        {% endif %}
+      </div>
+      <div class="rounded-lg border border-guios-border p-4">
+        <div class="text-sm text-guios-muted">Ultima evaluacion</div>
+        {% if latest_user_evaluation %}
+          <div class="mt-2 font-semibold text-guios-text">{{ latest_user_evaluation.software_name }}</div>
+          <div class="text-sm text-guios-muted">{{ latest_user_evaluation.context }} · {{ latest_user_evaluation.updated_at|date:"d/m/Y H:i" }}</div>
+          <a class="mt-4 inline-block rounded-md border border-guios-border px-4 py-2 text-sm text-guios-text hover:bg-guios-surface" href="{% url 'history' latest_user_evaluation.id %}">
+            Ver detalle
+          </a>
+        {% else %}
+          <p class="mt-2 text-sm text-guios-muted">Todavia no tienes evaluaciones registradas.</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="profile-edit-modal" class="{% if not open_profile_modal %}hidden {% endif %}fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  <div class="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl">
+    <div class="flex items-start justify-between bg-guios-navy p-6">
+      <div>
+        <h3 class="text-xl font-semibold text-white">Actualizar datos</h3>
+        <p class="mt-1 text-sm text-white/70">Edita la informacion basica visible en el sistema.</p>
+      </div>
+      <button class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xl leading-none text-white/80 hover:bg-white/10 hover:text-white" data-modal-close="profile-edit-modal" type="button" aria-label="Cerrar modal">x</button>
+    </div>
+    <form class="space-y-5 p-6" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="profile">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-guios-text" for="{{ form.first_name.id_for_label }}">Nombre</label>
+          <input class="w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange" id="{{ form.first_name.id_for_label }}" name="{{ form.first_name.html_name }}" value="{{ form.first_name.value|default:'' }}">
+          {% for error in form.first_name.errors %}
+            <p class="mt-1 text-xs text-red-700">{{ error }}</p>
+          {% endfor %}
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-guios-text" for="{{ form.last_name.id_for_label }}">Apellido</label>
+          <input class="w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange" id="{{ form.last_name.id_for_label }}" name="{{ form.last_name.html_name }}" value="{{ form.last_name.value|default:'' }}">
+          {% for error in form.last_name.errors %}
+            <p class="mt-1 text-xs text-red-700">{{ error }}</p>
+          {% endfor %}
+        </div>
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-medium text-guios-text">Correo electronico</label>
+        <div class="rounded-md border border-guios-border bg-guios-surface px-4 py-2.5 text-sm text-guios-text">
+          {% if request.user.email %}{{ request.user.email }}{% else %}Sin correo registrado{% endif %}
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 border-t border-guios-border pt-5">
+        <button class="rounded-md border border-guios-border px-5 py-2.5 text-sm text-guios-text hover:bg-guios-surface" data-modal-close="profile-edit-modal" type="button">Cancelar</button>
+        <button class="rounded-md bg-guios-orange px-6 py-2.5 text-sm font-medium text-white hover:opacity-90" type="submit">Guardar cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="password-change-modal" class="{% if not open_password_modal %}hidden {% endif %}fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  <div class="max-h-[90vh] w-full max-w-xl overflow-hidden rounded-lg bg-white shadow-xl">
+    <div class="flex items-start justify-between bg-guios-navy p-6">
+      <div>
+        <h3 class="text-xl font-semibold text-white">Cambiar contrasena</h3>
+        <p class="mt-1 text-sm text-white/70">Actualiza la contrasena asociada a tu cuenta.</p>
+      </div>
+      <button class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xl leading-none text-white/80 hover:bg-white/10 hover:text-white" data-modal-close="password-change-modal" type="button" aria-label="Cerrar modal">x</button>
+    </div>
+    <form class="max-h-[66vh] space-y-5 overflow-y-auto p-6" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="password">
+      <p class="text-sm text-guios-muted">
+        La nueva contrasena debe tener al menos 8 caracteres, no ser comun, no ser completamente numerica y no parecerse a tus datos personales.
+      </p>
+      {% for field in password_form %}
+        <div>
+          <label class="mb-2 block text-sm font-medium text-guios-text" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          <input
+            class="w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange"
+            id="{{ field.id_for_label }}"
+            name="{{ field.html_name }}"
+            type="password"
+            autocomplete="{% if field.name == 'old_password' %}current-password{% else %}new-password{% endif %}"
+            required
+          >
+          {% for error in field.errors %}
+            <p class="mt-1 text-xs text-red-700">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+      {% if password_form.non_field_errors %}
+        <div class="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {{ password_form.non_field_errors }}
+        </div>
+      {% endif %}
+      <div class="flex justify-end gap-3 border-t border-guios-border pt-5">
+        <button class="rounded-md border border-guios-border px-5 py-2.5 text-sm text-guios-text hover:bg-guios-surface" data-modal-close="password-change-modal" type="button">Cancelar</button>
+        <button class="rounded-md bg-guios-orange px-6 py-2.5 text-sm font-medium text-white hover:opacity-90" type="submit">Actualizar contrasena</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Historial de consulta | GUIOS+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-[112rem] space-y-6 p-4 sm:p-6 lg:px-10">
+  <div>
+    <h2 class="text-2xl font-semibold text-guios-text">Historial de consulta</h2>
+    <p class="mt-1 text-sm text-guios-muted">Software evaluado, recomendaciones y acceso a la evidencia registrada.</p>
+  </div>
+
+  <section class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
+    <div class="border-b border-guios-border bg-guios-surface p-4">
+      <h3 class="font-semibold text-guios-text">Evaluaciones registradas</h3>
+      <p class="mt-1 text-sm text-guios-muted">
+        Mostrando <span id="visible-history-count">{{ history_items|length }}</span> de {{ history_items|length }} evaluacion{% if history_items|length != 1 %}es{% endif %}.
+      </p>
+    </div>
+
+    {% if history_items %}
+      <div class="grid gap-3 border-b border-guios-border p-4 md:grid-cols-[1fr_240px]">
+        <input
+          id="history-search"
+          class="w-full rounded-md border border-guios-border px-4 py-2 text-sm outline-none focus:border-guios-orange"
+          placeholder="Buscar por software o contexto..."
+          type="search"
+        >
+        <select id="history-context-filter" class="rounded-md border border-guios-border px-4 py-2 text-sm outline-none focus:border-guios-orange">
+          <option value="">Todos los contextos</option>
+          {% for context_name in contexts %}
+            <option value="{{ context_name }}">{{ context_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[1000px]">
+          <thead>
+            <tr class="bg-guios-navy text-sm text-white">
+              <th class="px-4 py-3 text-left font-medium">Software</th>
+              <th class="px-4 py-3 text-left font-medium">Contexto</th>
+              <th class="px-4 py-3 text-center font-medium">Estado</th>
+              <th class="px-4 py-3 text-center font-medium">Recomendacion</th>
+              <th class="px-4 py-3 text-center font-medium">
+                <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">F/O/D/A</span>
+              </th>
+              <th class="px-4 py-3 text-center font-medium">Actualizado</th>
+              <th class="px-4 py-3 text-center font-medium">Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in history_items %}
+              <tr
+                class="border-b border-guios-border hover:bg-gray-50"
+                data-history-row
+                data-context="{{ item.evaluation.context|lower }}"
+                data-software="{{ item.evaluation.software_name|lower }}"
+              >
+                <td class="px-4 py-3">
+                  <div class="text-sm font-semibold text-guios-text">{{ item.evaluation.software_name }}</div>
+                  <div class="text-xs text-guios-muted">Creada: {{ item.evaluation.created_at|date:"d/m/Y H:i" }}</div>
+                </td>
+                <td class="px-4 py-3 text-sm text-guios-muted">{{ item.evaluation.context }}</td>
+                <td class="px-4 py-3 text-center">
+                  <span class="inline-block rounded-full bg-guios-warn px-3 py-1 text-xs font-medium text-guios-text">{{ item.status_display }}</span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  {% if item.recommendation %}
+                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-guios-orange text-sm font-bold text-white">
+                      {{ item.recommendation.code }}
+                    </span>
+                  {% else %}
+                    <span class="text-sm text-guios-muted">-</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 text-center text-sm font-medium text-guios-text">
+                  {{ item.fortalezas }}/{{ item.oportunidades }}/{{ item.debilidades }}/{{ item.amenazas }}
+                </td>
+                <td class="px-4 py-3 text-center text-sm text-guios-muted">{{ item.evaluation.updated_at|date:"d/m/Y H:i" }}</td>
+                <td class="px-4 py-3 text-center">
+                  <a class="inline-block rounded-md bg-guios-orange px-3 py-1.5 text-xs text-white hover:opacity-90" href="{% url 'history' item.evaluation.id %}">
+                    Ver
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div id="history-empty-state" class="hidden p-6 text-center text-sm text-guios-muted">
+          No hay evaluaciones que coincidan con los filtros seleccionados.
+        </div>
+      </div>
+    {% else %}
+      <div class="p-6 text-sm text-guios-muted">
+        Todavia no hay software evaluado.
+      </div>
+    {% endif %}
+  </section>
+
+  {% if history_items %}
+    <div id="history-pagination" class="mt-5 flex items-center justify-center gap-1 text-sm text-guios-text">
+      <button
+        id="history-first-page"
+        class="flex h-8 w-8 items-center justify-center rounded-md text-lg text-guios-navy hover:bg-guios-orange hover:text-white disabled:cursor-not-allowed disabled:bg-transparent disabled:text-guios-muted disabled:opacity-40"
+        type="button"
+        aria-label="Primera pagina"
+      >
+        «
+      </button>
+      <button
+        id="history-prev-page"
+        class="flex h-8 w-8 items-center justify-center rounded-md text-lg text-guios-navy hover:bg-guios-orange hover:text-white disabled:cursor-not-allowed disabled:bg-transparent disabled:text-guios-muted disabled:opacity-40"
+        type="button"
+        aria-label="Pagina anterior"
+      >
+        ‹
+      </button>
+      <span class="mx-2 h-5 border-l border-guios-border"></span>
+      <div id="history-page-list" class="flex items-center gap-1"></div>
+      <button
+        id="history-next-page"
+        class="flex h-8 w-8 items-center justify-center rounded-md text-lg text-guios-navy hover:bg-guios-orange hover:text-white disabled:cursor-not-allowed disabled:bg-transparent disabled:text-guios-muted disabled:opacity-40"
+        type="button"
+        aria-label="Pagina siguiente"
+      >
+        ›
+      </button>
+      <button
+        id="history-last-page"
+        class="flex h-8 w-8 items-center justify-center rounded-md text-lg text-guios-navy hover:bg-guios-orange hover:text-white disabled:cursor-not-allowed disabled:bg-transparent disabled:text-guios-muted disabled:opacity-40"
+        type="button"
+        aria-label="Ultima pagina"
+      >
+        »
+      </button>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'evaluations/js/history-list.js' %}"></script>
+{% endblock %}

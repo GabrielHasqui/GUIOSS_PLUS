@@ -1,0 +1,72 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesion | GUIOS+</title>
+  <link rel="stylesheet" href="{% static 'evaluations/css/tailwind.css' %}">
+  <link rel="stylesheet" href="{% static 'evaluations/css/theme.css' %}">
+</head>
+<body>
+  {% include "components/notifications.html" %}
+  <div class="flex min-h-screen items-center justify-center bg-[#12216a] px-4">
+    <div class="w-full max-w-lg">
+      <div class="mb-8 text-center">
+        <div class="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#F28C00]">
+          <span class="text-2xl font-bold text-white">G</span>
+        </div>
+        <h1 class="text-3xl font-bold text-white">GUIOS<span class="text-[#F28C00]">+</span></h1>
+        <p class="mt-1 text-sm text-white/80">Evaluacion inteligente para adopcion FLOSS</p>
+      </div>
+
+      <div class="rounded-lg bg-white p-8 shadow-lg">
+        <h2 class="mb-6 text-center text-xl font-semibold text-[#002B3A]">Iniciar sesion</h2>
+
+        {% if form.errors %}
+          <div class="mb-4 rounded-md border border-[#E99ABB] bg-[#E99ABB]/20 px-4 py-3 text-sm text-[#002B3A]">
+            Correo electronico o contrasena incorrectos.
+          </div>
+        {% endif %}
+
+        <form method="post" class="space-y-5">
+          {% csrf_token %}
+          <div>
+            <label class="mb-2 block text-sm text-[#002B3A]" for="{{ form.username.id_for_label }}">Correo electronico</label>
+            <input class="w-full rounded-md border border-[#D9DEE5] px-4 py-2.5 text-[#002B3A] focus:outline-none focus:ring-2 focus:ring-[#F28C00]" type="email" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" autocomplete="email" required>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm text-[#002B3A]" for="{{ form.password.id_for_label }}">Contrasena</label>
+            <div class="relative">
+              <input class="w-full rounded-md border border-[#D9DEE5] px-4 py-2.5 pr-12 text-[#002B3A] focus:outline-none focus:ring-2 focus:ring-[#F28C00]" type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" autocomplete="current-password" data-password-input required>
+              <button id="toggle-password" class="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#334155] hover:bg-[#F4F4F4]" type="button" aria-label="Mostrar contrasena">
+                <svg id="eye-open-icon" class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Z" />
+                </svg>
+                <svg id="eye-closed-icon" class="hidden h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.58 10.58a2 2 0 0 0 2.84 2.84" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.88 5.52A9.7 9.7 0 0 1 12 5.25C18 5.25 21.75 12 21.75 12a18.8 18.8 0 0 1-2.24 3.08" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.18 6.6C3.68 8.28 2.25 12 2.25 12S6 18.75 12 18.75a9.6 9.6 0 0 0 4.02-.9" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button class="w-full rounded-md bg-[#F28C00] py-2.5 text-white transition hover:opacity-90" type="submit">
+            Iniciar sesion
+          </button>
+        </form>
+
+        <div class="mt-6 border-t border-[#D9DEE5] pt-6 text-center text-xs text-[#334155]">
+          Ingresa con el correo registrado en tu cuenta.
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="{% static 'evaluations/js/common.js' %}"></script>
+  <script src="{% static 'evaluations/js/login.js' %}"></script>
+</body>
+</html>
