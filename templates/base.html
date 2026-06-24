@@ -1,0 +1,22 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}GUIOS+{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'evaluations/css/tailwind.css' %}">
+  <link rel="stylesheet" href="{% static 'evaluations/css/theme.css' %}">
+</head>
+<body class="min-h-screen bg-guios-surface text-guios-text">
+  {% include "components/header.html" %}
+  {% include "components/notifications.html" %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{% static 'evaluations/js/common.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "guios-plus",
+  "private": true,
+  "scripts": {
+    "dev": "python manage.py runserver",
+    "tailwind:watch": "tailwindcss -i ./static/evaluations/css/tailwind.input.css -o ./static/evaluations/css/tailwind.css --watch",
+    "tailwind:build": "tailwindcss -i ./static/evaluations/css/tailwind.input.css -o ./static/evaluations/css/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

@@ -1,0 +1,105 @@
+<header class="sticky top-0 z-50 bg-guios-navy shadow-sm">
+  <div class="px-4 sm:px-6 py-4">
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-xl font-bold text-white">GUIOS<span class="text-guios-orange">+</span></h1>
+        <p class="hidden sm:block text-sm text-white/80">Evaluacion inteligente para adopcion FLOSS</p>
+      </div>
+
+      <div class="group relative flex items-center gap-4">
+        <div class="flex cursor-default items-center gap-3 px-2 py-1 text-left transition group-hover:opacity-95">
+          <div class="hidden min-w-0 md:block text-right">
+            <div class="text-sm text-white">{{ header_user_display_name }}</div>
+            <div class="text-xs text-white/70">{{ request.user.profile.get_role_display|default:"Evaluador" }}</div>
+          </div>
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-guios-orange text-sm font-bold text-white">
+            {{ request.user.username|slice:":2"|upper }}
+          </div>
+        </div>
+
+        <div class="invisible absolute right-0 top-full z-[70] w-72 pt-2 opacity-0 transition group-hover:visible group-hover:opacity-100">
+          <div class="overflow-hidden rounded-lg border border-guios-border bg-white text-guios-text shadow-xl">
+            <div class="flex items-center gap-3 border-b border-guios-border bg-guios-surface px-3 py-3">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-guios-orange text-xs font-bold text-white">
+                {{ request.user.username|slice:":2"|upper }}
+              </div>
+              <div class="min-w-0">
+                <div class="truncate text-sm font-semibold text-guios-text">{{ menu_user_display_name|upper }}</div>
+                <div class="truncate text-xs text-guios-muted">{% if request.user.email %}{{ request.user.email }}{% else %}Sin correo registrado{% endif %}</div>
+              </div>
+            </div>
+
+            <a class="flex items-center gap-3 px-3 py-2.5 text-sm text-guios-text hover:bg-guios-surface" href="{% url 'profile' %}">
+              <span class="text-base text-guios-muted" aria-hidden="true">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 20.25a7.5 7.5 0 0 1 15 0" />
+                </svg>
+              </span>
+              <span>Gestionar mi perfil</span>
+            </a>
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button class="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-guios-text hover:bg-guios-surface" type="submit">
+                <span class="text-base text-guios-muted" aria-hidden="true">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75v8.25" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.05 6.75a8.25 8.25 0 1 0 9.9 0" />
+                  </svg>
+                </span>
+                <span>Cerrar sesion</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="border-t border-white/10 px-4 sm:px-6">
+    <div class="flex flex-wrap items-stretch gap-1 overflow-visible">
+      <a class="whitespace-nowrap border-b-2 px-4 py-3 text-sm transition {% if active_nav == 'dashboard' %}border-guios-orange text-white{% else %}border-transparent text-white/70 hover:text-white{% endif %}" href="{% url 'dashboard' %}">
+        Dashboard
+      </a>
+      {% if evaluation %}
+        <a class="whitespace-nowrap border-b-2 px-4 py-3 text-sm transition {% if active_nav == 'factors' %}border-guios-orange text-white{% else %}border-transparent text-white/70 hover:text-white{% endif %}" href="{% url 'factors' evaluation.id %}">
+          1. Factores
+        </a>
+        <a class="whitespace-nowrap border-b-2 px-4 py-3 text-sm transition {% if active_nav == 'subfactors' %}border-guios-orange text-white{% else %}border-transparent text-white/70 hover:text-white{% endif %}" href="{% url 'subfactors' evaluation.id %}">
+          2. Subfactores
+        </a>
+        <a class="whitespace-nowrap border-b-2 px-4 py-3 text-sm transition {% if active_nav == 'result' %}border-guios-orange text-white{% else %}border-transparent text-white/70 hover:text-white{% endif %}" href="{% url 'result' evaluation.id %}">
+          3. Resultado
+        </a>
+      {% else %}
+        <span class="whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm text-white/40">1. Factores</span>
+        <span class="whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm text-white/40">2. Subfactores</span>
+        <span class="whitespace-nowrap border-b-2 border-transparent px-4 py-3 text-sm text-white/40">3. Resultado</span>
+      {% endif %}
+      {% if request.user.is_authenticated %}
+        <div class="relative" data-admin-dropdown>
+          <button
+            class="flex whitespace-nowrap border-b-2 px-4 py-3 text-sm transition {% if active_nav == 'admin' %}border-guios-orange text-white{% else %}border-transparent text-white/70 hover:text-white{% endif %}"
+            type="button"
+            data-admin-dropdown-toggle
+            aria-expanded="false"
+          >
+            Administracion
+          </button>
+          <div class="absolute right-0 top-full z-[70] hidden min-w-64 pt-2" data-admin-dropdown-menu>
+            <div class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-xl">
+              {% if request.user.profile.role == "admin" %}
+              <a class="flex items-center justify-between gap-3 px-4 py-3 text-sm transition hover:bg-guios-surface {% if admin_menu == 'users' %}bg-guios-surface font-medium text-guios-orange{% else %}text-guios-text{% endif %}" href="{% url 'users_admin' %}">
+                <span>Usuarios</span>
+              </a>
+              {% endif %}
+              <a class="flex items-center justify-between gap-3 {% if request.user.profile.role == 'admin' %}border-t {% endif %} border-guios-border px-4 py-3 text-sm transition hover:bg-guios-surface {% if admin_menu == 'history' %}bg-guios-surface font-medium text-guios-orange{% else %}text-guios-text{% endif %}" href="{% url 'admin_history' %}">
+                <span>Historial de consulta</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </nav>
+</header>

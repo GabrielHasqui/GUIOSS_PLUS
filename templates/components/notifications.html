@@ -1,0 +1,18 @@
+{% if messages %}
+  <div class="fixed right-4 top-28 z-[60] w-[calc(100%-2rem)] max-w-lg space-y-3">
+    {% for message in messages %}
+      <div
+        class="flex items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-lg {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-900{% elif message.tags == 'warning' %}border-yellow-200 bg-yellow-50 text-yellow-900{% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-900{% else %}border-guios-border bg-white text-guios-text{% endif %}"
+        data-notification
+      >
+        <div class="mt-0.5 font-bold">
+          {% if message.tags == 'success' %}✓{% elif message.tags == 'warning' %}!{% elif message.tags == 'error' %}×{% else %}i{% endif %}
+        </div>
+        <div class="flex-1 leading-relaxed">{{ message }}</div>
+        <button class="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded text-lg leading-none text-current opacity-60 hover:bg-black/5 hover:opacity-100" data-notification-close type="button" aria-label="Cerrar notificacion">
+          x
+        </button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
