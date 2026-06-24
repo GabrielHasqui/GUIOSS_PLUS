@@ -67,6 +67,74 @@ Puedes generar una clave para Django con:
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
+#### Configurar las APIs bibliográficas
+
+GUIOS+ utiliza OpenAlex y Scopus para buscar publicaciones relacionadas con los factores de una evaluación. Las claves deben guardarse únicamente en `.env`.
+
+**OpenAlex**
+
+1. Crea una cuenta o inicia sesión en [OpenAlex](https://openalex.org/).
+2. Abre la sección oficial [API settings](https://openalex.org/settings/api) y genera una clave.
+3. Copia la clave y el correo asociado a tu cuenta:
+
+```env
+OPENALEX_EMAIL=tu-correo@example.com
+OPENALEX_API_KEY=tu-clave-openalex
+```
+
+La documentación oficial está disponible en [OpenAlex Developers](https://developers.openalex.org/).
+
+**Scopus**
+
+1. Inicia sesión o crea una cuenta en [Elsevier Developer Portal](https://dev.elsevier.com/).
+2. Entra en [Manage API Keys](https://dev.elsevier.com/apikey/manage) y registra una aplicación.
+3. Copia la clave generada:
+
+```env
+SCOPUS_API_KEY=tu-clave-scopus
+```
+
+El acceso a ciertos datos de Scopus puede depender de la suscripción o red de tu institución.
+
+**Semantic Scholar**
+
+La variable está preparada para una integración futura, pero el flujo actual de GUIOS+ consulta OpenAlex y Scopus. Si deseas reservar una clave, solicítala desde la [página oficial de Semantic Scholar API](https://www.semanticscholar.org/product/api):
+
+```env
+SEMANTIC_SCHOLAR_API_KEY=tu-clave-semantic-scholar
+```
+
+Para comprobar OpenAlex o Scopus desde el proyecto:
+
+```powershell
+python manage.py test_literature_apis --source openalex --count 1
+python manage.py test_literature_apis --source scopus --count 1
+```
+
+#### Configurar el correo electrónico
+
+El correo se utiliza para enviar el enlace de acceso inicial cuando un administrador crea un usuario. El proveedor debe permitir conexiones SMTP con usuario y contraseña.
+
+Ejemplo para Outlook:
+
+```env
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp-mail.outlook.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=tu-cuenta@outlook.com
+EMAIL_HOST_PASSWORD=tu-contraseña-o-contraseña-de-aplicación
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+DEFAULT_FROM_EMAIL=tu-cuenta@outlook.com
+```
+
+1. Revisa los [datos SMTP oficiales de Outlook](https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040).
+2. Si tu cuenta usa verificación en dos pasos, consulta cómo [crear una contraseña de aplicación](https://support.microsoft.com/en-us/account-billing/how-to-get-and-use-app-passwords-5896ed9b-4263-e681-128a-a6f2979a7944).
+3. Coloca el correo en `EMAIL_HOST_USER` y `DEFAULT_FROM_EMAIL`.
+4. Coloca la contraseña normal o de aplicación en `EMAIL_HOST_PASSWORD`.
+
+Para otro proveedor, sustituye `EMAIL_HOST`, `EMAIL_PORT` y el tipo de seguridad por los valores indicados en su documentación SMTP. No uses `EMAIL_USE_TLS=True` y `EMAIL_USE_SSL=True` al mismo tiempo.
+
 ### 5. Crear la base PostgreSQL
 
 Desde PostgreSQL crea la base indicada en `.env`. Con el nombre predeterminado:
