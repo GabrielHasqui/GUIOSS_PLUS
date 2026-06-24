@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Historial | GUIOS+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-[112rem] p-4 sm:p-6 lg:px-10">
+  <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div>
+      <h2 class="text-2xl font-semibold text-guios-text">Historial de {{ evaluation.software_name }}</h2>
+      <p class="mt-1 text-sm text-guios-muted">
+        Trazabilidad de la evaluacion, evidencia bibliografica por factor y clasificacion de Fortalezas, Oportunidades, Debilidades y Amenazas.
+      </p>
+    </div>
+    <a
+      class="inline-flex items-center justify-center rounded-md bg-guios-orange px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+      href="{% url 'evaluation_report_pdf' evaluation.id %}"
+    >
+      Exportar PDF
+    </a>
+  </div>
+
+  <div class="mb-4 rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+    <div class="grid grid-cols-1 gap-4 text-sm md:grid-cols-4 xl:grid-cols-8">
+      <div>
+        <div class="text-guios-muted">Software:</div>
+        <div class="font-medium text-guios-text">{{ evaluation.software_name }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Contexto:</div>
+        <div class="font-medium text-guios-text">{{ evaluation.context }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Evaluador responsable:</div>
+        <div class="font-medium text-guios-text">{{ created_by_display }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Estado:</div>
+        <div class="font-medium text-guios-orange">{{ evaluation_status_display }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Recomendacion:</div>
+        <div class="font-medium text-guios-orange">{% if recommendation %}{{ recommendation.code }}{% else %}-{% endif %}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Relevantes:</div>
+        <div class="font-medium text-guios-text">{{ relevant_count }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Consultas:</div>
+        <div class="font-medium text-guios-text">{{ query_count }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Documentos:</div>
+        <div class="font-medium text-guios-text">{{ document_count }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">
+          <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">F/O/D/A</span>:
+        </div>
+        <div class="font-medium text-guios-text">{{ fortalezas }}/{{ oportunidades }}/{{ debilidades }}/{{ amenazas }}</div>
+      </div>
+    </div>
+  </div>
+
+  {% if recommendation %}
+    <section class="mb-4 rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+      <div class="flex items-start gap-4">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-guios-orange text-xl font-bold text-white">
+          {{ recommendation.code }}
+        </div>
+        <div>
+          <h3 class="mb-2 text-lg font-semibold text-guios-text">Recomendacion {{ recommendation.code }}</h3>
+          <p class="text-sm leading-relaxed text-guios-muted">{{ recommendation.text }}</p>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="mb-4 overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
+    <div class="border-b border-guios-border bg-guios-surface p-4">
+      <h3 class="font-semibold text-guios-text">Evidencia y resultado por factor</h3>
+      <p class="mt-1 text-sm text-guios-muted">Cadena completa: literatura, importancia sugerida, decisor, ponderacion y clasificacion de Fortalezas, Oportunidades, Debilidades y Amenazas.</p>
+      <p class="mt-1 text-sm text-guios-muted">
+        Mostrando <span id="visible-factor-history-count">{{ factor_summaries|length }}</span> de {{ factor_summaries|length }} factor{% if factor_summaries|length != 1 %}es{% endif %}.
+      </p>
+    </div>
+
+    <div class="grid gap-3 border-b border-guios-border p-4 md:grid-cols-[1fr_240px_220px]">
+      <input
+        id="factor-history-search"
+        class="rounded-md border border-guios-border px-4 py-2 text-sm outline-none focus:border-guios-orange"
+        placeholder="Buscar por factor, dimension o clasificacion..."
+        type="search"
+      >
+      <select id="factor-history-dimension-filter" class="rounded-md border border-guios-border px-4 py-2 text-sm outline-none focus:border-guios-orange">
+        <option value="">Todas las dimensiones</option>
+        {% for dimension in dimensions %}
+          <option value="{{ dimension }}">{{ dimension }}</option>
+        {% endfor %}
+      </select>
+      <select id="factor-history-foda-filter" class="rounded-md border border-guios-border px-4 py-2 text-sm outline-none focus:border-guios-orange">
+        <option value="">Todas las clasificaciones</option>
+        <option value="Fortaleza">Fortaleza</option>
+        <option value="Oportunidad">Oportunidad</option>
+        <option value="Debilidad">Debilidad</option>
+        <option value="Amenaza">Amenaza</option>
+        <option value="sin-foda">Sin clasificacion</option>
+      </select>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[1200px]">
+        <thead>
+          <tr class="bg-guios-navy text-sm text-white">
+            <th class="px-4 py-3 text-left font-medium">Factor</th>
+            <th class="px-4 py-3 text-left font-medium">Dimension</th>
+            <th class="px-4 py-3 text-center font-medium">
+              <span class="cursor-help" title="Importancia identificada en la literatura" aria-label="Importancia identificada en la literatura">IL</span>
+            </th>
+            <th class="px-4 py-3 text-center font-medium">
+              <span class="cursor-help" title="Importancia experta base tomada de la tesis, no calculada por las APIs" aria-label="Importancia experta base tomada de la tesis">IE</span>
+            </th>
+            <th class="px-4 py-3 text-center font-medium">
+              <span class="cursor-help" title="Importancia sugerida: unifica literatura y expertos" aria-label="Importancia sugerida: unifica literatura y expertos">IS</span>
+            </th>
+            <th class="px-4 py-3 text-center font-medium">
+              <span class="cursor-help" title="Importancia relativa: combina importancia sugerida e importancia del decisor" aria-label="Importancia relativa: combina importancia sugerida e importancia del decisor">IR</span>
+            </th>
+            <th class="px-4 py-3 text-center font-medium">
+              <span class="cursor-help" title="Ponderacion media de los subfactores evaluados" aria-label="Ponderacion media de los subfactores evaluados">PM</span>
+            </th>
+            <th class="px-4 py-3 text-center font-medium">Alcance</th>
+            <th class="px-4 py-3 text-center font-medium">
+              <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">FODA</span>
+            </th>
+            <th class="px-4 py-3 text-center font-medium">Citas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in factor_summaries %}
+            {% with ef=item.evaluation_factor %}
+              <tr
+                class="border-b border-guios-border hover:bg-gray-50"
+                data-dimension="{{ ef.factor.dimension.name }}"
+                data-factor-history-row
+                data-factor-name="{{ ef.factor.name|lower }}"
+                data-foda="{% if ef.foda %}{{ ef.foda }}{% else %}sin-foda{% endif %}"
+              >
+                <td class="px-4 py-3 text-sm font-medium text-guios-text">{{ ef.factor.name }}</td>
+                <td class="px-4 py-3 text-sm text-guios-muted">{{ ef.factor.dimension.name }}</td>
+                <td class="px-4 py-3 text-center text-sm text-guios-muted">{% if ef.literature_importance %}{{ ef.literature_importance }}{% else %}-{% endif %}</td>
+                <td class="px-4 py-3 text-center text-sm text-guios-muted">{% if ef.expert_importance %}{{ ef.expert_importance }}{% else %}-{% endif %}</td>
+                <td class="px-4 py-3 text-center">
+                  <span class="inline-block rounded-full bg-guios-warn px-3 py-1 text-xs font-medium text-guios-text">{{ ef.get_suggested_importance_display }}</span>
+                </td>
+                <td class="px-4 py-3 text-center text-sm font-medium text-guios-orange">{% if ef.relative_importance %}{{ ef.get_relative_importance_display }}{% else %}-{% endif %}</td>
+                <td class="px-4 py-3 text-center text-sm text-guios-muted">{% if ef.mean_weight %}{{ ef.mean_weight|floatformat:1 }}{% else %}-{% endif %}</td>
+                <td class="px-4 py-3 text-center text-sm text-guios-muted">{{ ef.selected_scope }}</td>
+                <td class="px-4 py-3 text-center">
+                  {% if ef.foda %}
+                    <span class="inline-block rounded-full px-3 py-1 text-xs font-medium text-guios-text {% if ef.foda == 'Fortaleza' or ef.foda == 'Oportunidad' %}bg-guios-good{% else %}bg-guios-bad{% endif %}">{{ ef.foda }}</span>
+                  {% else %}
+                    <span class="text-sm text-guios-muted">-</span>
+                  {% endif %}
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <button
+                    class="inline-block rounded-md bg-guios-orange px-3 py-1 text-xs text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                    data-modal-open="factor-citations-{{ ef.id }}"
+                    type="button"
+                    {% if item.document_count == 0 %}disabled{% endif %}
+                  >
+                    Ver
+                  </button>
+                </td>
+              </tr>
+            {% endwith %}
+          {% empty %}
+            <tr>
+              <td class="px-4 py-6 text-center text-sm text-guios-muted" colspan="10">No hay factores para esta evaluacion.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div id="factor-history-empty-state" class="hidden p-6 text-center text-sm text-guios-muted">
+        No hay factores que coincidan con los filtros seleccionados.
+      </div>
+    </div>
+  </section>
+
+  {% for item in factor_summaries %}
+    {% with ef=item.evaluation_factor %}
+      <div id="factor-citations-{{ ef.id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div class="max-h-[85vh] w-full max-w-6xl overflow-hidden rounded-lg bg-white shadow-xl">
+          <div class="flex items-start justify-between gap-4 border-b border-white/10 bg-guios-navy p-5">
+            <div>
+              <h3 class="text-xl font-semibold text-white">Citas consultadas: {{ ef.factor.name }}</h3>
+              <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/80">
+                <span>Documentos: <span class="font-medium text-white">{{ item.document_count }}</span></span>
+                <span>Citas acumuladas: <span class="font-medium text-white">{{ item.citation_count }}</span></span>
+                <span>Importancia literatura: <span class="font-medium text-white">{% if ef.literature_importance %}{{ ef.literature_importance }}{% else %}-{% endif %}</span></span>
+                <span>IE base tesis: <span class="font-medium text-white">{% if ef.expert_importance %}{{ ef.expert_importance }}{% else %}-{% endif %}</span></span>
+              </div>
+            </div>
+            <button
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xl leading-none text-white/80 hover:bg-white/10 hover:text-white"
+              data-modal-close="factor-citations-{{ ef.id }}"
+              type="button"
+              aria-label="Cerrar modal"
+            >
+              x
+            </button>
+          </div>
+
+          <div class="max-h-[58vh] overflow-y-auto p-5">
+            {% if item.evidence_items %}
+              <div class="space-y-3">
+                {% for evidence in item.evidence_items %}
+                  <article class="rounded-lg border border-guios-border p-4 transition hover:border-guios-orange">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div class="min-w-0 flex-1">
+                        <h4 class="font-medium text-guios-text">{{ evidence.document.title }}</h4>
+                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-guios-muted">
+                          <span>Fuente: {{ evidence.document.get_source_display }}</span>
+                          <span>Año: {% if evidence.document.year %}{{ evidence.document.year }}{% else %}-{% endif %}</span>
+                          <span class="font-medium text-guios-orange">Citas: {{ evidence.document.citation_count }}</span>
+                          <span>Relevancia: {{ evidence.relevance_score|floatformat:1 }}</span>
+                        </div>
+                        {% if evidence.document.authors %}
+                          <p class="mt-2 text-xs text-guios-muted">Autores: {{ evidence.document.authors|truncatechars:180 }}</p>
+                        {% endif %}
+                        {% if evidence.matched_keywords %}
+                          <p class="mt-2 text-xs text-guios-muted">Coincidencias: {{ evidence.matched_keywords }}</p>
+                        {% endif %}
+                        {% if evidence.document.doi %}
+                          <p class="mt-2 text-xs text-guios-muted">DOI: {{ evidence.document.doi }}</p>
+                        {% endif %}
+                      </div>
+                      {% if evidence.document.url %}
+                        <a
+                          class="shrink-0 rounded-md border border-guios-border px-3 py-2 text-sm text-guios-orange hover:bg-guios-surface"
+                          href="{{ evidence.document.url }}"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          Abrir
+                        </a>
+                      {% endif %}
+                    </div>
+                  </article>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="rounded-lg border border-guios-border bg-guios-surface p-4 text-sm text-guios-muted">
+                No hay citas/documentos asociados a este factor.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endwith %}
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'evaluations/js/history-detail.js' %}"></script>
+{% endblock %}
+

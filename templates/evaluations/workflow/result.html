@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Resultado | GUIOS+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-[108rem] p-4 sm:p-6 lg:px-10">
+  <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div>
+      <h2 class="text-2xl font-semibold text-guios-text">Paso 3: Resultado y recomendacion</h2>
+      <p class="mt-1 text-sm text-guios-muted">
+        Clasificacion de Fortalezas, Oportunidades, Debilidades y Amenazas, y recomendacion sobre la adopcion FLOSS.
+      </p>
+    </div>
+    <a
+      class="inline-flex items-center justify-center rounded-md bg-guios-orange px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+      href="{% url 'evaluation_report_pdf' evaluation.id %}"
+    >
+      Exportar PDF
+    </a>
+  </div>
+
+  <div class="mb-4 rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+    <div class="grid grid-cols-1 gap-4 text-sm md:grid-cols-5">
+      <div>
+        <div class="text-guios-muted">Software:</div>
+        <div class="font-medium text-guios-text">{{ evaluation.software_name }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Contexto:</div>
+        <div class="font-medium text-guios-text">{{ evaluation.context }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Factores relevantes:</div>
+        <div class="font-medium text-guios-text">{{ result_factors|length }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Factores evaluados:</div>
+        <div class="font-medium text-guios-text">{{ result_factors|length }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Resultado:</div>
+        <div class="font-medium text-guios-orange">Recomendacion {{ recommendation.code }}</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="mb-4 rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+    <div class="flex items-start gap-4">
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-guios-orange text-xl font-bold text-white">
+        {{ recommendation.code }}
+      </div>
+      <div>
+        <h3 class="mb-2 text-lg font-semibold text-guios-text">Recomendacion {{ recommendation.code }}</h3>
+        <p class="text-sm leading-relaxed text-guios-muted">{{ recommendation.text }}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-4 rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-guios-text">
+      Matriz <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">FODA</span>
+    </h3>
+    <p class="mb-4 text-sm text-guios-muted">Fortalezas, Oportunidades, Debilidades y Amenazas.</p>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-lg border border-guios-border p-4">
+        <div class="mb-2 text-sm font-semibold text-guios-text">Fortalezas</div>
+        <div class="text-3xl font-bold text-green-700">{{ fortalezas }}</div>
+        <div class="text-xs text-guios-muted">Factores internos positivos</div>
+      </div>
+      <div class="rounded-lg border border-guios-border p-4">
+        <div class="mb-2 text-sm font-semibold text-guios-text">Oportunidades</div>
+        <div class="text-3xl font-bold text-guios-orange">{{ oportunidades }}</div>
+        <div class="text-xs text-guios-muted">Factores externos positivos</div>
+      </div>
+      <div class="rounded-lg border border-guios-border p-4">
+        <div class="mb-2 text-sm font-semibold text-guios-text">Debilidades</div>
+        <div class="text-3xl font-bold text-pink-700">{{ debilidades }}</div>
+        <div class="text-xs text-guios-muted">Factores internos negativos</div>
+      </div>
+      <div class="rounded-lg border border-guios-border p-4">
+        <div class="mb-2 text-sm font-semibold text-guios-text">Amenazas</div>
+        <div class="text-3xl font-bold text-red-700">{{ amenazas }}</div>
+        <div class="text-xs text-guios-muted">Factores externos negativos</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[980px]">
+        <thead>
+          <tr class="bg-guios-navy text-sm text-white">
+            <th class="px-4 py-3 text-left font-medium">Factor</th>
+            <th class="px-4 py-3 text-center font-medium">Importancia<br>sugerida</th>
+            <th class="px-4 py-3 text-center font-medium">Importancia<br>relativa</th>
+            <th class="px-4 py-3 text-center font-medium">Ponderacion media</th>
+            <th class="px-4 py-3 text-center font-medium">Alcance</th>
+            <th class="px-4 py-3 text-center font-medium">
+              <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">FODA</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ef in result_factors %}
+            <tr class="border-b border-guios-border hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm font-medium text-guios-text">{{ ef.factor.name }}</td>
+              <td class="px-4 py-3 text-center">
+                <span class="inline-block rounded-full bg-guios-warn px-3 py-1 text-xs font-medium text-guios-text">
+                  {{ ef.get_suggested_importance_display }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="inline-block rounded-full bg-guios-warn px-3 py-1 text-xs font-medium text-guios-text">
+                  {{ ef.get_relative_importance_display }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center text-sm font-medium text-guios-orange">
+                {{ ef.mean_weight|floatformat:1 }}
+              </td>
+              <td class="px-4 py-3 text-center text-sm text-guios-muted">{{ ef.selected_scope }}</td>
+              <td class="px-4 py-3 text-center">
+                <span class="inline-block rounded-full px-3 py-1 text-xs font-medium text-guios-text {% if ef.foda == 'Fortaleza' or ef.foda == 'Oportunidad' %}bg-guios-good{% else %}bg-guios-bad{% endif %}">
+                  {{ ef.foda }}
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+

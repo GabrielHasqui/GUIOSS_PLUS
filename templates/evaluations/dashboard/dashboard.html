@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard | GUIOS+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-[108rem] space-y-6 p-4 sm:p-6 lg:px-10">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h2 class="text-2xl font-semibold text-guios-text">Dashboard</h2>
+      <p class="mt-1 text-sm text-guios-muted">Resumen estadistico del uso del evaluador GUIOS+.</p>
+    </div>
+    {% if can_create_evaluation %}
+      <button class="inline-flex items-center justify-center rounded-md bg-guios-orange px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90" type="button" data-modal-open="new-evaluation">
+        Nueva evaluacion
+      </button>
+    {% elif blocking_evaluation %}
+      <a class="inline-flex items-center justify-center rounded-md bg-guios-orange px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90" href="{% url continue_route blocking_evaluation.id %}">
+        Continuar evaluacion activa
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+      <div class="text-3xl font-bold text-guios-navy">{{ total_evaluations }}</div>
+      <div class="text-sm text-guios-muted">Evaluaciones totales</div>
+    </div>
+    <div class="rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+      <div class="text-3xl font-bold text-green-700">{{ completed_evaluations }}</div>
+      <div class="text-sm text-guios-muted">Evaluaciones completadas</div>
+    </div>
+    <div class="rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+      <div class="text-3xl font-bold text-guios-orange">{{ unique_software_count }}</div>
+      <div class="text-sm text-guios-muted">Software evaluados</div>
+    </div>
+    <div class="rounded-lg border border-guios-border bg-white p-5 shadow-sm">
+      <div class="text-3xl font-bold text-pink-700">{{ literature_document_count }}</div>
+      <div class="text-sm text-guios-muted">Documentos bibliograficos</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+    <section class="rounded-lg border border-guios-border bg-white shadow-sm">
+      <div class="border-b border-guios-border p-5">
+        <h3 class="text-lg font-semibold text-guios-text">Progreso de la evaluacion activa</h3>
+        <p class="mt-1 text-sm text-guios-muted">Avance real del caso que se encuentra en trabajo.</p>
+      </div>
+      <div class="space-y-4 p-5">
+        {% for item in evaluation_progress_summary %}
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-4 text-sm">
+              <span class="font-medium text-guios-text">{{ item.label }}</span>
+              <span class="text-guios-muted">{{ item.count }} / {{ item.total }}</span>
+            </div>
+            <div class="h-2 overflow-hidden rounded-full bg-guios-surface">
+              <div class="h-full rounded-full bg-guios-orange" style="width: {{ item.percent }}%"></div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="rounded-lg border border-guios-border bg-guios-surface p-4 text-sm text-guios-muted">
+            Todavia no hay una evaluacion activa para mostrar progreso.
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="rounded-lg border border-guios-border bg-white shadow-sm">
+      <div class="border-b border-guios-border p-5">
+        <h3 class="text-lg font-semibold text-guios-text">Evaluacion activa</h3>
+        <p class="mt-1 text-sm text-guios-muted">Ultimo caso registrado en el evaluador.</p>
+      </div>
+      <div class="p-5">
+        {% if evaluation %}
+          {% if blocking_evaluation %}
+            <div class="mb-4 rounded-lg border border-guios-border bg-guios-surface p-3 text-sm text-guios-muted">
+              Completa esta evaluacion antes de iniciar una nueva.
+            </div>
+          {% endif %}
+          <dl class="space-y-3 text-sm">
+            <div class="flex justify-between border-b border-guios-surface py-2">
+              <dt class="text-guios-muted">Software:</dt>
+              <dd class="font-medium text-guios-text">{{ evaluation.software_name }}</dd>
+            </div>
+            <div class="flex justify-between border-b border-guios-surface py-2">
+              <dt class="text-guios-muted">Creado por:</dt>
+              <dd class="font-medium text-guios-text">
+                {{ evaluation.created_by.get_full_name|default:evaluation.created_by.email|default:evaluation.created_by.username }}
+              </dd>
+            </div>
+            <div class="flex justify-between border-b border-guios-surface py-2">
+              <dt class="text-guios-muted">Contexto:</dt>
+              <dd class="font-medium text-guios-text">{{ evaluation.context }}</dd>
+            </div>
+            <div class="flex justify-between border-b border-guios-surface py-2">
+              <dt class="text-guios-muted">Estado:</dt>
+              <dd class="font-medium text-guios-text">{{ evaluation_status_display }}</dd>
+            </div>
+            <div class="flex justify-between py-2">
+              <dt class="text-guios-muted">Actualizada:</dt>
+              <dd class="font-medium text-guios-text">{{ evaluation.updated_at|date:"d/m/Y H:i" }}</dd>
+            </div>
+          </dl>
+        {% else %}
+          <div class="rounded-lg border border-guios-border bg-guios-surface p-4 text-sm text-guios-muted">
+            Todavia no hay evaluaciones creadas.
+          </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+
+  <section class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
+    <div class="flex flex-col gap-3 border-b border-guios-border p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-guios-text">Evaluaciones recientes</h3>
+        <p class="mt-1 text-sm text-guios-muted">Ultimos casos registrados en el evaluador.</p>
+      </div>
+      <a class="rounded-md border border-guios-border px-4 py-2 text-sm text-guios-text hover:bg-guios-surface" href="{% if request.user.profile.role == 'admin' %}{% url 'admin_history' %}{% else %}{% url 'history_index' %}{% endif %}">
+        Ver historial
+      </a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[980px]">
+        <thead>
+          <tr class="bg-guios-navy text-sm text-white">
+            <th class="px-4 py-3 text-left font-medium">Software</th>
+            <th class="px-4 py-3 text-left font-medium">Creado por</th>
+            <th class="px-4 py-3 text-left font-medium">Contexto</th>
+            <th class="px-4 py-3 text-left font-medium">Estado</th>
+            <th class="px-4 py-3 text-center font-medium">Recomendacion</th>
+            <th class="px-4 py-3 text-center font-medium">Actualizada</th>
+            <th class="px-4 py-3 text-center font-medium">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in recent_evaluations %}
+            <tr class="border-b border-guios-border hover:bg-gray-50">
+              <td class="px-4 py-3 text-sm font-medium text-guios-text">{{ item.software_name }}</td>
+              <td class="px-4 py-3 text-sm text-guios-muted">{{ item.created_by.get_full_name|default:item.created_by.email|default:item.created_by.username }}</td>
+              <td class="px-4 py-3 text-sm text-guios-muted">{{ item.context }}</td>
+              <td class="px-4 py-3 text-sm text-guios-muted">{{ item.get_status_display }}</td>
+              <td class="px-4 py-3 text-center">
+                {% if item.recommendation %}
+                  <span class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-guios-warn px-3 text-sm font-bold text-guios-text">{{ item.recommendation.code }}</span>
+                {% else %}
+                  <span class="text-sm text-guios-muted">-</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-center text-sm text-guios-muted">{{ item.updated_at|date:"d/m/Y H:i" }}</td>
+              <td class="px-4 py-3 text-center">
+                <a class="inline-block rounded-md bg-guios-orange px-3 py-1 text-xs text-white hover:opacity-90" href="{% url 'history' item.id %}">
+                  Ver
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td class="px-4 py-6 text-center text-sm text-guios-muted" colspan="6">
+                Todavia no hay evaluaciones registradas.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<div id="new-evaluation" class="{% if not open_evaluation_modal %}hidden {% endif %}fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  <div class="w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-xl">
+    <div class="flex items-start justify-between bg-guios-navy p-6">
+      <div>
+        <h3 class="text-xl font-semibold text-white">Nueva evaluacion FLOSS</h3>
+        <p class="mt-1 text-sm text-white/70">Registra el caso de adopcion que sera evaluado.</p>
+      </div>
+      <button class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xl leading-none text-white/80 hover:bg-white/10 hover:text-white" data-modal-close="new-evaluation" type="button" aria-label="Cerrar modal">x</button>
+    </div>
+
+    <form id="new-evaluation-form" method="post" action="{% url 'evaluation_create' %}">
+      {% csrf_token %}
+      <div class="space-y-5 p-6">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-guios-text">Software FLOSS a evaluar</label>
+          <input class="w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange" name="software_name" maxlength="180" value="{{ evaluation_form.software_name.value|default:'' }}" placeholder="Ej. Moodle, Koha, LibreOffice, PostgreSQL" required>
+          <p class="mt-1 text-xs text-guios-muted">Nombre del software libre que la organizacion desea adoptar.</p>
+          {% for error in evaluation_form.software_name.errors %}<p class="mt-1 text-xs text-red-700">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-guios-text">Area o contexto</label>
+          <input class="w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange" name="context" maxlength="120" value="{{ evaluation_form.context.value|default:'' }}" placeholder="Ej. Educacion, salud, gobierno, empresa" required>
+          <p class="mt-1 text-xs text-guios-muted">Sector, area o tipo de organizacion donde se evaluara la adopcion.</p>
+          {% for error in evaluation_form.context.errors %}<p class="mt-1 text-xs text-red-700">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-guios-text">Descripcion breve del caso</label>
+          <textarea class="w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange" name="description" maxlength="2000" rows="3" placeholder="Ej. Sistema de gestion academica para una universidad publica">{{ evaluation_form.description.value|default:'' }}</textarea>
+          <p class="mt-1 text-xs text-guios-muted">Resumen del escenario, necesidad o problema que motiva la adopcion.</p>
+          {% for error in evaluation_form.description.errors %}<p class="mt-1 text-xs text-red-700">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+          <label class="mb-3 block text-sm font-medium text-guios-text">Fuentes bibliograficas</label>
+          <div class="space-y-2">
+            <label class="flex items-center gap-3 rounded-md border border-guios-border p-3 hover:bg-gray-50">
+              <input class="h-4 w-4 accent-guios-orange" type="checkbox" name="sources" value="openalex" {% if 'openalex' in evaluation_form.sources.value %}checked{% endif %}>
+              <span class="text-sm text-guios-text">OpenAlex</span>
+            </label>
+            <label class="flex items-center gap-3 rounded-md border border-guios-border p-3 hover:bg-gray-50">
+              <input class="h-4 w-4 accent-guios-orange" type="checkbox" name="sources" value="scopus" {% if evaluation_form.is_bound %}{% if 'scopus' in evaluation_form.sources.value %}checked{% endif %}{% else %}checked{% endif %}>
+              <span class="text-sm text-guios-text">Scopus</span>
+            </label>
+          </div>
+          {% for error in evaluation_form.sources.errors %}<p class="mt-1 text-xs text-red-700">{{ error }}</p>{% endfor %}
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 border-t border-guios-border bg-guios-surface p-4">
+        <button class="rounded-md border border-guios-border px-6 py-2.5 text-guios-text hover:bg-gray-200" data-modal-close="new-evaluation" type="button">Cancelar</button>
+        <button id="create-evaluation-button" class="rounded-md bg-guios-orange px-6 py-2.5 text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70" type="submit">Crear evaluacion</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="evaluation-loading" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+  <div class="w-full max-w-lg rounded-lg bg-white p-8 text-center shadow-xl">
+    <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-guios-surface">
+      <div class="h-10 w-10 animate-spin rounded-full border-4 border-guios-border border-t-guios-orange"></div>
+    </div>
+    <h3 class="text-xl font-semibold text-guios-text">Calculando evaluacion</h3>
+    <p class="mt-2 text-sm leading-relaxed text-guios-muted">
+      Estamos consultando las fuentes bibliograficas y calculando la importancia sugerida de los factores.
+    </p>
+    <div class="mt-6 overflow-hidden rounded-full bg-guios-surface">
+      <div class="h-2 w-2/3 animate-pulse rounded-full bg-guios-orange"></div>
+    </div>
+    <p class="mt-4 text-xs text-guios-muted">Este proceso puede tardar unos segundos si se usan varias APIs.</p>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'evaluations/js/dashboard.js' %}"></script>
+{% endblock %}

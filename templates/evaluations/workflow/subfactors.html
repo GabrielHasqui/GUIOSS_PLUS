@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Subfactores | GUIOS+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-[112rem] p-4 sm:p-6 lg:px-10">
+  <div class="mb-6">
+    <h2 class="text-2xl font-semibold text-guios-text">Paso 2: Subfactores</h2>
+    <p class="mt-1 text-sm text-guios-muted">
+      Establece la relevancia de los subfactores que componen al factor seleccionado. Cuando termines, guarda la evaluacion del factor.
+    </p>
+  </div>
+
+  <div class="mb-4 rounded-lg border border-guios-border bg-white p-4 shadow-sm">
+    <div class="grid grid-cols-1 gap-3 text-sm md:grid-cols-5">
+      <div>
+        <div class="text-guios-muted">Software evaluado:</div>
+        <div class="font-medium text-guios-text">{{ evaluation.software_name }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Contexto:</div>
+        <div class="font-medium text-guios-text">{{ evaluation.context }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Factor seleccionado:</div>
+        <div class="font-medium text-guios-text">{{ selected_factor.factor.name }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Importancia sugerida:</div>
+        <div class="font-medium text-guios-orange">{{ selected_factor.get_suggested_importance_display }}</div>
+      </div>
+      <div>
+        <div class="text-guios-muted">Importancia relativa:</div>
+        <div class="font-medium text-guios-orange">{{ selected_factor.get_relative_importance_display }}</div>
+      </div>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
+      <div class="flex flex-col gap-3 border-b border-guios-border bg-guios-surface p-4 lg:flex-row lg:items-center">
+        <label class="text-sm font-medium text-guios-text" for="factor-selector">Factor:</label>
+        <select
+          id="factor-selector"
+          class="max-w-3xl flex-1 rounded-md border border-guios-border px-4 py-2 text-guios-text"
+          data-factor-selector
+        >
+          {% for ef in relevant_factors %}
+            <option value="{{ ef.id }}" {% if ef.id == selected_factor.id %}selected{% endif %}>
+              {{ ef.factor.name }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <div class="flex flex-wrap gap-2 text-xs lg:ml-auto">
+          <span class="rounded-full bg-guios-warn px-3 py-1 text-guios-text">
+            Alcance: {{ selected_factor.selected_scope }}
+          </span>
+          <span class="rounded-full bg-guios-warn px-3 py-1 text-guios-text">
+            Ponderacion:
+            {% if selected_factor.mean_weight %}{{ selected_factor.mean_weight|floatformat:1 }}{% else %}-{% endif %}
+          </span>
+          <span class="rounded-full {% if selected_factor.foda == 'Fortaleza' or selected_factor.foda == 'Oportunidad' %}bg-guios-good{% elif selected_factor.foda %}bg-guios-bad{% else %}bg-guios-surface{% endif %} px-3 py-1 text-guios-text">
+            <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">FODA</span>: {% if selected_factor.foda %}{{ selected_factor.foda }}{% else %}-{% endif %}
+          </span>
+        </div>
+
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[900px]">
+          <thead>
+            <tr class="bg-guios-navy text-sm text-white">
+              <th class="w-1/2 px-4 py-3 text-left font-medium">Subfactor</th>
+              <th class="px-4 py-3 text-center font-medium">Evaluacion</th>
+              <th class="px-4 py-3 text-center font-medium">Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for esf in selected_subfactors %}
+              <tr class="border-b border-guios-border hover:bg-gray-50">
+                <td class="px-4 py-4 text-sm font-medium text-guios-text">
+                  {{ esf.subfactor.name }}
+                </td>
+                <td class="px-4 py-4">
+                  <div class="flex items-center justify-center gap-4">
+                    <input
+                      class="w-52 accent-guios-orange"
+                      data-compliance-slider
+                      max="4"
+                      min="1"
+                      name="compliance_{{ esf.id }}"
+                      type="range"
+                      value="{{ esf.compliance }}"
+                    >
+                    <span class="w-8 text-center text-sm font-medium text-guios-orange" data-compliance-value>
+                      {{ esf.compliance }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-4 py-4 text-center">
+                  <span class="inline-block rounded-full px-4 py-1.5 text-xs font-medium text-guios-text {% if esf.compliance == 1 %}bg-guios-bad{% elif esf.compliance == 4 %}bg-guios-good{% else %}bg-guios-warn{% endif %}" data-compliance-label>
+                    {{ esf.get_compliance_display }}
+                  </span>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td class="px-4 py-6 text-center text-sm text-guios-muted" colspan="3">
+                  No hay subfactores generados para este factor.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="border-t border-guios-border bg-guios-surface p-4">
+        <div class="mb-4 space-y-1 text-xs text-guios-muted">
+          <div><strong>Escala de evaluacion:</strong></div>
+          <div>1 = No cumple el requisito</div>
+          <div>2 = Desconozco si cumple requisito</div>
+          <div>3 = Cumple parcialmente el requisito</div>
+          <div>4 = Cumple el requisito</div>
+        </div>
+
+        <div class="flex flex-col gap-3 sm:flex-row sm:justify-between">
+          <a class="rounded-md border border-guios-border px-6 py-2 text-center text-guios-text hover:bg-gray-100" href="{% url 'factors' evaluation.id %}">
+            Volver al Paso 1
+          </a>
+          <div class="flex gap-3">
+            <button class="rounded-md border border-guios-border px-6 py-2 text-guios-text hover:bg-gray-100" type="submit">
+              Guardar subfactores
+            </button>
+            {% if all_subfactors_complete %}
+              <button class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" type="submit" formaction="{% url 'result' evaluation.id %}" formmethod="post">
+                Continuar al Paso 3
+              </button>
+            {% else %}
+              <button class="rounded-md bg-guios-orange px-6 py-2 text-white opacity-60" type="button" disabled title="Guarda los subfactores de todos los factores relevantes">
+                Continuar al Paso 3
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'evaluations/js/subfactors.js' %}"></script>
+{% endblock %}
+
