@@ -6,6 +6,7 @@ from apps.evaluations.models import (
     Dimension,
     Evaluation,
     EvaluationFactor,
+    EvaluationStatus,
     EvaluationSubfactor,
     Factor,
     FodaLevel,
@@ -20,6 +21,8 @@ from apps.evaluations.services import (
     classify_foda,
     initialize_relevant_subfactors,
     is_relevant,
+    save_factor_decision_importance,
+    save_single_subfactor_compliance,
     save_subfactor_compliance,
 )
 
@@ -127,6 +130,23 @@ class OriginalGuiosSubfactorWorkflowTests(TestCase):
         self.assertEqual(self.evaluation_factor.mean_weight, 3.5)
         self.assertEqual(self.evaluation_factor.foda, FodaLevel.FORTALEZA)
 
+    def test_save_single_subfactor_updates_factor_summary(self):
+        subfactor = EvaluationSubfactor.objects.filter(
+            evaluation_factor=self.evaluation_factor
+        ).first()
+
+        save_single_subfactor_compliance(
+            self.evaluation_factor.evaluation,
+            subfactor.pk,
+            "4",
+        )
+        subfactor.refresh_from_db()
+        self.evaluation_factor.refresh_from_db()
+
+        self.assertEqual(subfactor.compliance, SubfactorComplianceLevel.CUMPLE)
+        self.assertEqual(self.evaluation_factor.mean_weight, 2.5)
+        self.assertEqual(self.evaluation_factor.foda, FodaLevel.DEBILIDAD)
+
     def test_partial_subfactor_submission_is_rejected(self):
         subfactor = EvaluationSubfactor.objects.filter(
             evaluation_factor=self.evaluation_factor
@@ -141,3 +161,32 @@ class OriginalGuiosSubfactorWorkflowTests(TestCase):
 
         self.evaluation_factor.refresh_from_db()
         self.assertIsNone(self.evaluation_factor.mean_weight)
+
+    def test_completed_evaluation_rejects_factor_and_subfactor_changes(self):
+        self.evaluation_factor.evaluation.status = EvaluationStatus.COMPLETED
+        self.evaluation_factor.evaluation.save(update_fields=["status", "updated_at"])
+        subfactor = EvaluationSubfactor.objects.filter(
+            evaluation_factor=self.evaluation_factor
+        ).first()
+
+        with self.assertRaises(ValidationError):
+            save_factor_decision_importance(
+                self.evaluation_factor.evaluation,
+                {
+                    f"decision_maker_importance_{self.evaluation_factor.pk}": str(
+                        ImportanceLevel.FUNDAMENTAL
+                    ),
+                },
+            )
+
+        with self.assertRaises(ValidationError):
+            save_single_subfactor_compliance(
+                self.evaluation_factor.evaluation,
+                subfactor.pk,
+                "4",
+            )
+
+        self.evaluation_factor.refresh_from_db()
+        subfactor.refresh_from_db()
+        self.assertIsNone(self.evaluation_factor.decision_maker_importance)
+        self.assertEqual(subfactor.compliance, SubfactorComplianceLevel.NO_CUMPLE)

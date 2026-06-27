@@ -8,7 +8,11 @@
   <div class="mb-6">
     <h2 class="text-2xl font-semibold text-guios-text">Paso 1: Factores relevantes</h2>
     <p class="mt-1 text-sm text-guios-muted">
-      Revisa la importancia sugerida calculada automaticamente y define la importancia del decisor para tu organizacion.
+      {% if evaluation.status == "completed" %}
+        Evaluacion completada. Puedes revisar los factores, pero los valores ya no se pueden modificar.
+      {% else %}
+        Revisa la importancia sugerida calculada automaticamente y define la importancia del decisor para tu organizacion.
+      {% endif %}
     </p>
   </div>
 
@@ -94,7 +98,7 @@
                   </span>
                 </td>
                 <td class="px-4 py-3 text-center">
-                  <select class="rounded-md border border-guios-border px-3 py-1 text-sm text-guios-text" name="decision_maker_importance_{{ ef.id }}" data-decision-select>
+                  <select class="rounded-md border border-guios-border px-3 py-1 text-sm text-guios-text disabled:bg-guios-surface disabled:text-guios-muted" name="decision_maker_importance_{{ ef.id }}" data-decision-select {% if evaluation.status == "completed" %}disabled{% endif %}>
                     <option value="">---------</option>
                     {% for value, label in importance_levels %}
                       <option value="{{ value }}" {% if value == ef.decision_maker_importance %}selected{% endif %}>{{ label }}</option>
@@ -135,11 +139,17 @@
 
       <div class="flex flex-col items-center justify-between gap-3 border-t border-guios-border bg-guios-surface p-4 sm:flex-row">
         <div class="text-sm text-guios-muted">Mostrando <span id="visible-factor-count">{{ evaluation_factors|length }}</span> de {{ evaluation_factors|length }} factores</div>
-        <div class="flex gap-3">
-          <button class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" name="action" value="continue" type="submit">
-            Continuar al Paso 2
-          </button>
-        </div>
+        {% if evaluation.status == "completed" %}
+          <a class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" href="{% url 'result' evaluation.id %}">
+            Ver resultado
+          </a>
+        {% else %}
+          <div class="flex gap-3">
+            <button class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" name="action" value="continue" type="submit">
+              Continuar al Paso 2
+            </button>
+          </div>
+        {% endif %}
       </div>
     </div>
   </form>

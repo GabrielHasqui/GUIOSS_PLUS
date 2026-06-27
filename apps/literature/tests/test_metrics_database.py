@@ -100,3 +100,29 @@ class SuggestedImportanceEvidenceTests(TestCase):
         result = recalculate_suggested_importance_from_evidence(self.evaluation)
 
         self.assertEqual(result, 1)
+
+    def test_completed_queries_without_evidence_preserve_original_suggested_importance(self):
+        LiteratureQuery.objects.create(
+            evaluation_factor=self.evaluation_factor,
+            source=LiteratureSource.SCOPUS,
+            query_text="completed empty query",
+            status=LiteratureQueryStatus.COMPLETED,
+            total_results=0,
+            completed_at=timezone.now(),
+        )
+        EvaluationFactor.objects.filter(pk=self.evaluation_factor.pk).update(
+            literature_importance=ImportanceLevel.IRRELEVANTE,
+            expert_importance=ImportanceLevel.IMPORTANTE,
+            suggested_importance=ImportanceLevel.OPCIONAL,
+        )
+
+        result = recalculate_suggested_importance_from_evidence(self.evaluation)
+        self.evaluation_factor.refresh_from_db()
+
+        self.assertEqual(result, 0)
+        self.assertIsNone(self.evaluation_factor.literature_importance)
+        self.assertIsNone(self.evaluation_factor.expert_importance)
+        self.assertEqual(
+            self.evaluation_factor.suggested_importance,
+            self.factor.default_suggested_importance,
+        )

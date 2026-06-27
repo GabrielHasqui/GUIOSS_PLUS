@@ -8,7 +8,11 @@
   <div class="mb-6">
     <h2 class="text-2xl font-semibold text-guios-text">Paso 2: Subfactores</h2>
     <p class="mt-1 text-sm text-guios-muted">
-      Establece la relevancia de los subfactores que componen al factor seleccionado. Cuando termines, guarda la evaluacion del factor.
+      {% if evaluation.status == "completed" %}
+        Evaluacion completada. Puedes revisar los subfactores, pero los valores ya no se pueden modificar.
+      {% else %}
+        Evalua los subfactores que componen al factor seleccionado. Los cambios se guardan automaticamente.
+      {% endif %}
     </p>
   </div>
 
@@ -39,6 +43,7 @@
 
   <form method="post">
     {% csrf_token %}
+    <input type="hidden" data-subfactor-save-url value="{% url 'subfactor_save' evaluation.id %}">
     <div class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
       <div class="flex flex-col gap-3 border-b border-guios-border bg-guios-surface p-4 lg:flex-row lg:items-center">
         <label class="text-sm font-medium text-guios-text" for="factor-selector">Factor:</label>
@@ -60,10 +65,10 @@
           </span>
           <span class="rounded-full bg-guios-warn px-3 py-1 text-guios-text">
             Ponderacion:
-            {% if selected_factor.mean_weight %}{{ selected_factor.mean_weight|floatformat:1 }}{% else %}-{% endif %}
+            <span data-mean-weight>{% if selected_factor.mean_weight %}{{ selected_factor.mean_weight|floatformat:1 }}{% else %}-{% endif %}</span>
           </span>
-          <span class="rounded-full {% if selected_factor.foda == 'Fortaleza' or selected_factor.foda == 'Oportunidad' %}bg-guios-good{% elif selected_factor.foda %}bg-guios-bad{% else %}bg-guios-surface{% endif %} px-3 py-1 text-guios-text">
-            <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">FODA</span>: {% if selected_factor.foda %}{{ selected_factor.foda }}{% else %}-{% endif %}
+          <span class="rounded-full {% if selected_factor.foda == 'Fortaleza' or selected_factor.foda == 'Oportunidad' %}bg-guios-good{% elif selected_factor.foda %}bg-guios-bad{% else %}bg-guios-surface{% endif %} px-3 py-1 text-guios-text" data-foda-badge>
+            <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">FODA</span>: <span data-foda-value>{% if selected_factor.foda %}{{ selected_factor.foda }}{% else %}-{% endif %}</span>
           </span>
         </div>
 
@@ -92,8 +97,10 @@
                       max="4"
                       min="1"
                       name="compliance_{{ esf.id }}"
+                      data-subfactor-id="{{ esf.id }}"
                       type="range"
                       value="{{ esf.compliance }}"
+                      {% if evaluation.status == "completed" %}disabled{% endif %}
                     >
                     <span class="w-8 text-center text-sm font-medium text-guios-orange" data-compliance-value>
                       {{ esf.compliance }}
@@ -130,16 +137,22 @@
           <a class="rounded-md border border-guios-border px-6 py-2 text-center text-guios-text hover:bg-gray-100" href="{% url 'factors' evaluation.id %}">
             Volver al Paso 1
           </a>
-          <div class="flex gap-3">
-            <button class="rounded-md border border-guios-border px-6 py-2 text-guios-text hover:bg-gray-100" type="submit">
-              Guardar subfactores
-            </button>
-            {% if all_subfactors_complete %}
-              <button class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" type="submit" formaction="{% url 'result' evaluation.id %}" formmethod="post">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            {% if evaluation.status == "completed" %}
+              <a class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" href="{% url 'result' evaluation.id %}">
+                Ver resultado
+              </a>
+            {% else %}
+              <span class="min-w-36 text-sm text-guios-muted" data-save-status aria-live="polite">
+                Guardado automatico
+              </span>
+            {% endif %}
+            {% if evaluation.status != "completed" and all_subfactors_complete %}
+              <button class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" type="submit" formaction="{% url 'result' evaluation.id %}" formmethod="post" data-continue-button>
                 Continuar al Paso 3
               </button>
-            {% else %}
-              <button class="rounded-md bg-guios-orange px-6 py-2 text-white opacity-60" type="button" disabled title="Guarda los subfactores de todos los factores relevantes">
+            {% elif evaluation.status != "completed" %}
+              <button class="rounded-md bg-guios-orange px-6 py-2 text-white opacity-60" type="submit" formaction="{% url 'result' evaluation.id %}" formmethod="post" disabled title="Guarda los subfactores de todos los factores relevantes" data-continue-button>
                 Continuar al Paso 3
               </button>
             {% endif %}
@@ -155,4 +168,3 @@
 {% block extra_js %}
   <script src="{% static 'evaluations/js/subfactors.js' %}"></script>
 {% endblock %}
-

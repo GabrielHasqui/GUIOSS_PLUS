@@ -4,7 +4,10 @@ from django.test import SimpleTestCase, override_settings
 
 from apps.evaluations.models import ImportanceLevel
 from apps.literature.services import THESIS_BASE_EXPERT_IMPORTANCE,assign_quartile_importance,calculate_factor_importance_metrics,calculate_literature_ratio,calculate_quartile_thresholds,calculate_suggested_importance,scopus_entry_url
-from apps.literature.services.matching import is_usable_literature_result
+from apps.literature.services.matching import (
+    is_usable_literature_result,
+    normalize_context_for_search,
+)
 from apps.literature.clients.openalex import search_openalex_works
 
 
@@ -70,6 +73,12 @@ class SuggestedImportanceCalculationTests(SimpleTestCase):
         self.assertFalse(is_usable_literature_result("Valid title", "", 8))
         self.assertFalse(is_usable_literature_result("Valid title", "2-s2.0-1", 3))
         self.assertTrue(is_usable_literature_result("Valid title", "2-s2.0-1", 5))
+
+    def test_library_context_is_normalized_for_literature_search(self):
+        self.assertEqual(
+            normalize_context_for_search("Bibliotecas universitarias"),
+            "academic libraries",
+        )
 
     def test_suggested_importance_uses_guios_assignment_matrix(self):
         expected_matrix = [

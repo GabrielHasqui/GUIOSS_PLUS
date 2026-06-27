@@ -1,10 +1,13 @@
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
+from ..models import EvaluationStatus
 from ..selectors import get_evaluation,get_factor_name_for_evaluation_factor,get_factors_context_data,get_relevant_factors,get_result_context_data,get_selected_relevant_factor,get_subfactors_context_data,has_incomplete_relevant_subfactors
-from ..services import evaluation_has_relevant_factors,initialize_relevant_subfactors,save_factor_decision_importance,save_subfactor_compliance,update_recommendation
+from ..services import evaluation_has_relevant_factors,initialize_relevant_subfactors,save_factor_decision_importance,save_single_subfactor_compliance,save_subfactor_compliance,update_recommendation
 
 @login_required
 def factors(request, evaluation_id):
@@ -81,6 +84,36 @@ def subfactors(request, evaluation_id):
 
 
 @login_required
+@require_POST
+def save_subfactor(request, evaluation_id):
+    evaluation = get_evaluation(evaluation_id, request.user)
+
+    try:
+        evaluation_factor = save_single_subfactor_compliance(
+            evaluation,
+            request.POST.get("subfactor_id"),
+            request.POST.get("compliance"),
+        )
+    except ValidationError as exc:
+        return JsonResponse({"ok": False, "error": exc.messages[0]}, status=400)
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "mean_weight": (
+                round(evaluation_factor.mean_weight, 1)
+                if evaluation_factor.mean_weight is not None
+                else None
+            ),
+            "foda": evaluation_factor.foda,
+            "all_subfactors_complete": not has_incomplete_relevant_subfactors(
+                evaluation
+            ),
+        }
+    )
+
+
+@login_required
 def result(request, evaluation_id):
     evaluation = get_evaluation(evaluation_id, request.user)
     relevant_factors = get_relevant_factors(evaluation)
@@ -102,6 +135,9 @@ def result(request, evaluation_id):
     recommendation = getattr(evaluation, "recommendation", None)
 
     if request.method == "POST":
+        if evaluation.status == EvaluationStatus.COMPLETED:
+            return redirect("result", evaluation_id=evaluation.pk)
+
         if update_recommendation(evaluation) is None:
             messages.warning(
                 request,

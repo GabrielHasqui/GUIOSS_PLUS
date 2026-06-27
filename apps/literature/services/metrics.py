@@ -230,6 +230,25 @@ def recalculate_suggested_importance_from_evidence(evaluation):
             }
         )
 
+    if not any(metrics["document_count"] for metrics in factor_metrics):
+        for evaluation_factor in evaluation_factors:
+            evaluation_factor.literature_importance = None
+            evaluation_factor.expert_importance = None
+            evaluation_factor.suggested_importance = (
+                evaluation_factor.factor.default_suggested_importance
+            )
+            evaluation_factor.save(
+                update_fields=[
+                    "literature_importance",
+                    "expert_importance",
+                    "suggested_importance",
+                ]
+            )
+
+        evaluation.status = EvaluationStatus.SUGGESTED_READY
+        evaluation.save(update_fields=["status", "updated_at"])
+        return 0
+
     calculate_factor_importance_metrics(factor_metrics)
     update_evaluation_factors_from_importance_metrics(factor_metrics)
 

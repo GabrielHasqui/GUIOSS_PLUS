@@ -122,6 +122,10 @@ def normalize_context_for_search(context):
         "Empresa": "enterprise",
         "Organización": "organization",
         "Organizacion": "organization",
+        "Biblioteca": "library",
+        "Bibliotecas": "libraries",
+        "Biblioteca universitaria": "academic library",
+        "Bibliotecas universitarias": "academic libraries",
     }
 
     return context_map.get(context, context)

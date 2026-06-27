@@ -170,6 +170,9 @@ def update_evaluation_factor_relative_importance(evaluation_factor):
 
 
 def save_factor_decision_importance(evaluation, post_data):
+    if evaluation.status == EvaluationStatus.COMPLETED:
+        raise ValidationError("La evaluacion ya fue completada y no puede modificarse.")
+
     for evaluation_factor in EvaluationFactor.objects.filter(evaluation=evaluation):
         field_name = f"decision_maker_importance_{evaluation_factor.pk}"
         value = post_data.get(field_name)
@@ -234,6 +237,9 @@ def update_factor_mean_weight_and_foda(evaluation_factor):
 
 
 def save_subfactor_compliance(evaluation, selected_factor, post_data):
+    if evaluation.status == EvaluationStatus.COMPLETED:
+        raise ValidationError("La evaluacion ya fue completada y no puede modificarse.")
+
     evaluation_subfactors = list(EvaluationSubfactor.objects.filter(
         evaluation_factor=selected_factor,
     ))
@@ -268,6 +274,47 @@ def save_subfactor_compliance(evaluation, selected_factor, post_data):
         evaluation.save(update_fields=["status", "updated_at"])
     else:
         Evaluation.objects.filter(pk=evaluation.pk).update(updated_at=timezone.now())
+
+
+def save_single_subfactor_compliance(evaluation, evaluation_subfactor_id, compliance_value):
+    if evaluation.status == EvaluationStatus.COMPLETED:
+        raise ValidationError("La evaluacion ya fue completada y no puede modificarse.")
+
+    try:
+        compliance = int(compliance_value)
+    except (TypeError, ValueError) as exc:
+        raise ValidationError("El nivel de cumplimiento no es valido.") from exc
+
+    if compliance not in SubfactorComplianceLevel.values:
+        raise ValidationError("El nivel de cumplimiento no es valido.")
+
+    evaluation_subfactor = (
+        EvaluationSubfactor.objects.select_related("evaluation_factor")
+        .filter(
+            pk=evaluation_subfactor_id,
+            evaluation_factor__evaluation=evaluation,
+            evaluation_factor__is_relevant=True,
+        )
+        .first()
+    )
+    if evaluation_subfactor is None:
+        raise ValidationError("El subfactor no pertenece a esta evaluacion.")
+
+    EvaluationSubfactor.objects.filter(pk=evaluation_subfactor.pk).update(
+        compliance=compliance
+    )
+    update_factor_mean_weight_and_foda(evaluation_subfactor.evaluation_factor)
+    evaluation_subfactor.evaluation_factor.refresh_from_db(
+        fields=["mean_weight", "foda"]
+    )
+
+    if not has_incomplete_relevant_subfactors(evaluation):
+        evaluation.status = EvaluationStatus.SUBFACTORS_READY
+        evaluation.save(update_fields=["status", "updated_at"])
+    else:
+        Evaluation.objects.filter(pk=evaluation.pk).update(updated_at=timezone.now())
+
+    return evaluation_subfactor.evaluation_factor
 
 
 def update_recommendation(evaluation):

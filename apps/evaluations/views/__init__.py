@@ -1,7 +1,7 @@
 from .dashboard import create_evaluation, dashboard
 from .exports import export_evaluation_pdf
 from .history import history, history_index
-from .workflow import factors, result, subfactors
+from .workflow import factors, result, save_subfactor, subfactors
 
 __all__ = [
     "create_evaluation",
@@ -11,5 +11,6 @@ __all__ = [
     "history",
     "history_index",
     "result",
+    "save_subfactor",
     "subfactors",
 ]
