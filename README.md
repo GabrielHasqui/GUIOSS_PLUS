@@ -96,14 +96,6 @@ SCOPUS_API_KEY=tu-clave-scopus
 
 El acceso a ciertos datos de Scopus puede depender de la suscripción o red de tu institución.
 
-**Semantic Scholar**
-
-La variable está preparada para una integración futura, pero el flujo actual de GUIOS+ consulta OpenAlex y Scopus. Si deseas reservar una clave, solicítala desde la [página oficial de Semantic Scholar API](https://www.semanticscholar.org/product/api):
-
-```env
-SEMANTIC_SCHOLAR_API_KEY=tu-clave-semantic-scholar
-```
-
 Para comprobar OpenAlex o Scopus desde el proyecto:
 
 ```powershell

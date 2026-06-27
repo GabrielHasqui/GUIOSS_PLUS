@@ -4,7 +4,6 @@ from django.db import models
 class LiteratureSource(models.TextChoices):
     SCOPUS = "scopus", "Scopus"
     OPENALEX = "openalex", "OpenAlex"
-    SEMANTIC_SCHOLAR = "semantic_scholar", "Semantic Scholar"
 
 
 class LiteratureQueryStatus(models.TextChoices):

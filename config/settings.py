@@ -218,7 +218,6 @@ LOGIN_LOCKOUT_SECONDS = int(os.environ.get('LOGIN_LOCKOUT_SECONDS', '900'))
 OPENALEX_EMAIL = os.environ.get('OPENALEX_EMAIL', '')
 OPENALEX_API_KEY = os.environ.get('OPENALEX_API_KEY', '')
 SCOPUS_API_KEY = os.environ.get('SCOPUS_API_KEY', '')
-SEMANTIC_SCHOLAR_API_KEY = os.environ.get('SEMANTIC_SCHOLAR_API_KEY', '')
 
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
