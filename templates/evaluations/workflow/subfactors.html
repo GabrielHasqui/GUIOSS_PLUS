@@ -68,7 +68,7 @@
             <span data-mean-weight>{% if selected_factor.mean_weight %}{{ selected_factor.mean_weight|floatformat:1 }}{% else %}-{% endif %}</span>
           </span>
           <span class="rounded-full {% if selected_factor.foda == 'Fortaleza' or selected_factor.foda == 'Oportunidad' %}bg-guios-good{% elif selected_factor.foda %}bg-guios-bad{% else %}bg-guios-surface{% endif %} px-3 py-1 text-guios-text" data-foda-badge>
-            <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">FODA</span>: <span data-foda-value>{% if selected_factor.foda %}{{ selected_factor.foda }}{% else %}-{% endif %}</span>
+            Fortalezas, oportunidades, debilidades y amenazas: <span data-foda-value>{% if selected_factor.foda %}{{ selected_factor.foda }}{% else %}-{% endif %}</span>
           </span>
         </div>
 

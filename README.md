@@ -180,7 +180,3 @@ npm run dev
 - `apps/literature`: consultas bibliográficas, documentos y métricas de evidencia.
 - `templates`: interfaz HTML del sistema.
 - `static`: estilos Tailwind y comportamiento JavaScript.
-
-## Seguridad
-
-El archivo `.env` contiene secretos y no debe subirse al repositorio. Usa `.env.example` únicamente como guía y reemplaza todos los valores de ejemplo en cada instalación.

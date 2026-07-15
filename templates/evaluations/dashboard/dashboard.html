@@ -188,8 +188,16 @@
           {% for error in evaluation_form.software_name.errors %}<p class="mt-1 text-xs text-red-700">{{ error }}</p>{% endfor %}
         </div>
         <div>
-          <label class="mb-2 block text-sm font-medium text-guios-text">Area o contexto</label>
-          <input class="w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange" name="context" maxlength="120" value="{{ evaluation_form.context.value|default:'' }}" placeholder="Ej. Educacion, salud, gobierno, empresa" required>
+          <label class="mb-2 block text-sm font-medium text-guios-text" for="evaluation-context">Area o contexto</label>
+          <input type="hidden" name="context_mode" value="{{ evaluation_form.context_mode.value|default:'choice' }}" data-context-mode>
+          <select id="evaluation-context" class="{% if evaluation_form.context_mode.value == 'other' %}hidden {% endif %}w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange" name="{% if evaluation_form.context_mode.value == 'other' %}{% else %}context{% endif %}" required data-context-select>
+            <option value="">Selecciona un contexto</option>
+            {% for value, label in evaluation_form.context_choices %}
+              <option value="{{ value }}" {% if value == evaluation_form.context.value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <input id="evaluation-context-other" class="{% if evaluation_form.context_mode.value != 'other' %}hidden {% endif %}w-full rounded-md border border-guios-border px-4 py-2.5 text-guios-text focus:outline-none focus:ring-2 focus:ring-guios-orange" name="{% if evaluation_form.context_mode.value == 'other' %}context{% endif %}" maxlength="120" value="{% if evaluation_form.context_mode.value == 'other' %}{{ evaluation_form.context.value|default:'' }}{% endif %}" placeholder="Escribe el area o contexto" data-context-other-input>
+          <button class="{% if evaluation_form.context_mode.value != 'other' %}hidden {% endif %}mt-2 text-sm font-medium text-guios-orange hover:underline" type="button" data-context-list-button>Elegir de la lista</button>
           <p class="mt-1 text-xs text-guios-muted">Sector, area o tipo de organizacion donde se evaluara la adopcion.</p>
           {% for error in evaluation_form.context.errors %}<p class="mt-1 text-xs text-red-700">{{ error }}</p>{% endfor %}
         </div>

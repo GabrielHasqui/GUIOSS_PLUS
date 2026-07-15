@@ -61,21 +61,11 @@
             <tr class="bg-guios-navy text-sm text-white">
               <th class="px-4 py-3 text-left font-medium">Factor</th>
               <th class="px-4 py-3 text-left font-medium">Dimension</th>
-              <th class="px-4 py-3 text-center font-medium">
-                <span class="cursor-help" title="Importancia identificada en la literatura" aria-label="Importancia identificada en la literatura">IL</span>
-              </th>
-              <th class="px-4 py-3 text-center font-medium">
-                <span class="cursor-help" title="Importancia experta base tomada de la tesis, no calculada por las APIs" aria-label="Importancia experta base tomada de la tesis">IE</span>
-              </th>
-              <th class="px-4 py-3 text-center font-medium">
-                <span class="cursor-help" title="Importancia sugerida: unifica literatura y expertos" aria-label="Importancia sugerida: unifica literatura y expertos">IS</span>
-              </th>
-              <th class="px-4 py-3 text-center font-medium">
-                <span class="cursor-help" title="Importancia asignada por el decisor de la organizacion" aria-label="Importancia asignada por el decisor de la organizacion">Imp. decisor</span>
-              </th>
-              <th class="px-4 py-3 text-center font-medium">
-                <span class="cursor-help" title="Importancia relativa: combina importancia sugerida e importancia del decisor" aria-label="Importancia relativa: combina importancia sugerida e importancia del decisor">IR</span>
-              </th>
+              <th class="px-4 py-3 text-center font-medium">Importancia en la literatura</th>
+              <th class="px-4 py-3 text-center font-medium">Importancia experta</th>
+              <th class="px-4 py-3 text-center font-medium">Importancia sugerida</th>
+              <th class="px-4 py-3 text-center font-medium">Importancia del decisor</th>
+              <th class="px-4 py-3 text-center font-medium">Importancia relativa</th>
               <th class="px-4 py-3 text-center font-medium">Alcance</th>
               <th class="px-4 py-3 text-center font-medium">Estado</th>
               <th class="px-4 py-3 text-center font-medium">Evidencia</th>
@@ -163,7 +153,7 @@
             <div class="mt-2 grid grid-cols-1 gap-2 text-sm text-white/80 sm:grid-cols-4">
               <div>Documentos: <span class="font-medium text-white">{{ ef.evidence_items.count }}</span></div>
               <div>Importancia literatura: <span class="font-medium text-white">{% if ef.literature_importance %}{{ ef.literature_importance }}{% else %}-{% endif %}</span></div>
-              <div>IE base tesis: <span class="font-medium text-white">{% if ef.expert_importance %}{{ ef.expert_importance }}{% else %}-{% endif %}</span></div>
+              <div>Importancia experta base de la tesis: <span class="font-medium text-white">{% if ef.expert_importance %}{{ ef.expert_importance }}{% else %}-{% endif %}</span></div>
               <div>Importancia sugerida: <span class="font-medium text-white">{{ ef.suggested_importance }}</span></div>
             </div>
           </div>

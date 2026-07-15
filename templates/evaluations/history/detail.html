@@ -55,9 +55,7 @@
         <div class="font-medium text-guios-text">{{ document_count }}</div>
       </div>
       <div>
-        <div class="text-guios-muted">
-          <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">F/O/D/A</span>:
-        </div>
+        <div class="text-guios-muted">Fortalezas, oportunidades, debilidades y amenazas:</div>
         <div class="font-medium text-guios-text">{{ fortalezas }}/{{ oportunidades }}/{{ debilidades }}/{{ amenazas }}</div>
       </div>
     </div>
@@ -115,24 +113,14 @@
           <tr class="bg-guios-navy text-sm text-white">
             <th class="px-4 py-3 text-left font-medium">Factor</th>
             <th class="px-4 py-3 text-left font-medium">Dimension</th>
-            <th class="px-4 py-3 text-center font-medium">
-              <span class="cursor-help" title="Importancia identificada en la literatura" aria-label="Importancia identificada en la literatura">IL</span>
-            </th>
-            <th class="px-4 py-3 text-center font-medium">
-              <span class="cursor-help" title="Importancia experta base tomada de la tesis, no calculada por las APIs" aria-label="Importancia experta base tomada de la tesis">IE</span>
-            </th>
-            <th class="px-4 py-3 text-center font-medium">
-              <span class="cursor-help" title="Importancia sugerida: unifica literatura y expertos" aria-label="Importancia sugerida: unifica literatura y expertos">IS</span>
-            </th>
-            <th class="px-4 py-3 text-center font-medium">
-              <span class="cursor-help" title="Importancia relativa: combina importancia sugerida e importancia del decisor" aria-label="Importancia relativa: combina importancia sugerida e importancia del decisor">IR</span>
-            </th>
-            <th class="px-4 py-3 text-center font-medium">
-              <span class="cursor-help" title="Ponderacion media de los subfactores evaluados" aria-label="Ponderacion media de los subfactores evaluados">PM</span>
-            </th>
+            <th class="px-4 py-3 text-center font-medium">Importancia en la literatura</th>
+            <th class="px-4 py-3 text-center font-medium">Importancia experta</th>
+            <th class="px-4 py-3 text-center font-medium">Importancia sugerida</th>
+            <th class="px-4 py-3 text-center font-medium">Importancia relativa</th>
+            <th class="px-4 py-3 text-center font-medium">Ponderacion media</th>
             <th class="px-4 py-3 text-center font-medium">Alcance</th>
             <th class="px-4 py-3 text-center font-medium">
-              <span class="cursor-help" title="Fortalezas / Oportunidades / Debilidades / Amenazas" aria-label="Fortalezas, Oportunidades, Debilidades y Amenazas">FODA</span>
+              <span class="cursor-help" title="Fortalezas, oportunidades, debilidades y amenazas" aria-label="Fortalezas, oportunidades, debilidades y amenazas">FODA</span>
             </th>
             <th class="px-4 py-3 text-center font-medium">Citas</th>
           </tr>
@@ -200,7 +188,7 @@
                 <span>Documentos: <span class="font-medium text-white">{{ item.document_count }}</span></span>
                 <span>Citas acumuladas: <span class="font-medium text-white">{{ item.citation_count }}</span></span>
                 <span>Importancia literatura: <span class="font-medium text-white">{% if ef.literature_importance %}{{ ef.literature_importance }}{% else %}-{% endif %}</span></span>
-                <span>IE base tesis: <span class="font-medium text-white">{% if ef.expert_importance %}{{ ef.expert_importance }}{% else %}-{% endif %}</span></span>
+                <span>Importancia experta base de la tesis: <span class="font-medium text-white">{% if ef.expert_importance %}{{ ef.expert_importance }}{% else %}-{% endif %}</span></span>
               </div>
             </div>
             <button

@@ -40,6 +40,70 @@ class EvaluationInputSecurityTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Evaluation.objects.filter(created_by=self.user).exists())
 
+    def test_create_evaluation_accepts_controlled_context(self):
+        response = self.client.post(
+            reverse("evaluation_create"),
+            data={
+                "software_name": "Moodle",
+                "context": "Educacion",
+                "description": "Prueba",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            Evaluation.objects.filter(
+                created_by=self.user,
+                context="Educacion",
+            ).exists()
+        )
+
+    def test_create_evaluation_uses_other_context_value(self):
+        response = self.client.post(
+            reverse("evaluation_create"),
+            data={
+                "software_name": "Moodle",
+                "context_mode": "other",
+                "context": "Cooperativa",
+                "description": "Prueba",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            Evaluation.objects.filter(
+                created_by=self.user,
+                context="Cooperativa",
+            ).exists()
+        )
+
+    def test_create_evaluation_requires_other_context_when_selected(self):
+        response = self.client.post(
+            reverse("evaluation_create"),
+            data={
+                "software_name": "Moodle",
+                "context_mode": "other",
+                "context": "",
+                "description": "Prueba",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Evaluation.objects.filter(created_by=self.user).exists())
+
+    def test_create_evaluation_rejects_unknown_context(self):
+        response = self.client.post(
+            reverse("evaluation_create"),
+            data={
+                "software_name": "Moodle",
+                "context": "Texto libre",
+                "description": "Prueba",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Evaluation.objects.filter(created_by=self.user).exists())
+
     def test_create_evaluation_rejects_oversized_name(self):
         response = self.client.post(
             reverse("evaluation_create"),
