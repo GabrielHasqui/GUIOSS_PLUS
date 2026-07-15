@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Resultado | GUIOS+{% endblock %}
 
@@ -52,6 +53,10 @@
       <div>
         <h3 class="mb-2 text-lg font-semibold text-guios-text">Recomendacion {{ recommendation.code }}</h3>
         <p class="text-sm leading-relaxed text-guios-muted">{{ recommendation.text }}</p>
+        <div class="mt-3 rounded-lg border border-guios-border bg-guios-surface p-3 text-sm text-guios-text">
+          <span class="font-semibold">Por que se genero este resultado:</span>
+          {{ recommendation_reason }}
+        </div>
       </div>
     </div>
   </section>
@@ -87,26 +92,36 @@
 
   <section class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
     <div class="overflow-x-auto">
-      <table class="w-full min-w-[980px]">
+      <table class="w-full min-w-[1120px]">
         <thead>
           <tr class="bg-guios-navy text-sm text-white">
             <th class="px-4 py-3 text-left font-medium">Factor</th>
+            <th class="px-4 py-3 text-left font-medium">Dimension</th>
             <th class="px-4 py-3 text-center font-medium">Importancia<br>sugerida</th>
+            <th class="px-4 py-3 text-center font-medium">Importancia<br>decisor</th>
             <th class="px-4 py-3 text-center font-medium">Importancia<br>relativa</th>
             <th class="px-4 py-3 text-center font-medium">Ponderacion media</th>
             <th class="px-4 py-3 text-center font-medium">Alcance</th>
             <th class="px-4 py-3 text-center font-medium">
               <span class="cursor-help" title="Fortalezas, oportunidades, debilidades y amenazas" aria-label="Fortalezas, oportunidades, debilidades y amenazas">FODA</span>
             </th>
+            <th class="px-4 py-3 text-center font-medium">Explicacion</th>
           </tr>
         </thead>
         <tbody>
-          {% for ef in result_factors %}
+          {% for item in result_summaries %}
+            {% with ef=item.evaluation_factor %}
             <tr class="border-b border-guios-border hover:bg-gray-50">
               <td class="px-4 py-3 text-sm font-medium text-guios-text">{{ ef.factor.name }}</td>
+              <td class="px-4 py-3 text-sm text-guios-muted">{{ ef.factor.dimension.name }}</td>
               <td class="px-4 py-3 text-center">
                 <span class="inline-block rounded-full bg-guios-warn px-3 py-1 text-xs font-medium text-guios-text">
                   {{ ef.get_suggested_importance_display }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span class="inline-block rounded-full bg-guios-surface px-3 py-1 text-xs font-medium text-guios-text">
+                  {{ ef.get_decision_maker_importance_display }}
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
@@ -123,12 +138,112 @@
                   {{ ef.foda }}
                 </span>
               </td>
+              <td class="px-4 py-3 text-center">
+                <button
+                  class="inline-flex items-center justify-center rounded-md bg-guios-orange px-3 py-2 text-xs font-medium text-white hover:opacity-90"
+                  data-modal-open="result-explanation-{{ ef.id }}"
+                  type="button"
+                >
+                  Ver detalle
+                </button>
+              </td>
             </tr>
+            {% endwith %}
           {% endfor %}
         </tbody>
       </table>
     </div>
   </section>
 </div>
+
+{% for item in result_summaries %}
+  {% with ef=item.evaluation_factor %}
+    <div id="result-explanation-{{ ef.id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div class="max-h-[85vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-xl">
+        <div class="flex items-start justify-between gap-4 border-b border-white/10 bg-guios-navy p-5">
+          <div>
+            <h3 class="text-xl font-semibold text-white">{{ ef.factor.name }}</h3>
+            <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-white/80">
+              <span>Dimension: <span class="font-medium text-white">{{ ef.factor.dimension.name }}</span></span>
+              <span>IR: <span class="font-medium text-white">{{ ef.get_relative_importance_display }}</span></span>
+              <span>PM: <span class="font-medium text-white">{{ ef.mean_weight|floatformat:1 }}</span></span>
+              <span>FODA: <span class="font-medium text-white">{{ ef.foda }}</span></span>
+            </div>
+          </div>
+          <button
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xl leading-none text-white/80 hover:bg-white/10 hover:text-white"
+            data-modal-close="result-explanation-{{ ef.id }}"
+            type="button"
+            aria-label="Cerrar modal"
+          >
+            x
+          </button>
+        </div>
+
+        <div class="max-h-[58vh] overflow-y-auto p-5">
+          <div class="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div class="space-y-4">
+              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-lg border border-guios-border p-3">
+                  <div class="text-xs uppercase tracking-wide text-guios-muted">Importancia sugerida</div>
+                  <div class="mt-1 font-medium text-guios-text">{{ ef.get_suggested_importance_display }}</div>
+                </div>
+                <div class="rounded-lg border border-guios-border p-3">
+                  <div class="text-xs uppercase tracking-wide text-guios-muted">Importancia decisor</div>
+                  <div class="mt-1 font-medium text-guios-text">{{ ef.get_decision_maker_importance_display }}</div>
+                </div>
+                <div class="rounded-lg border border-guios-border p-3">
+                  <div class="text-xs uppercase tracking-wide text-guios-muted">Importancia relativa</div>
+                  <div class="mt-1 font-medium text-guios-text">{{ ef.get_relative_importance_display }}</div>
+                </div>
+                <div class="rounded-lg border border-guios-border p-3">
+                  <div class="text-xs uppercase tracking-wide text-guios-muted">Alcance</div>
+                  <div class="mt-1 font-medium text-guios-text">{{ ef.selected_scope }}</div>
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-guios-border p-4">
+                <div class="mb-3 flex items-center justify-between gap-3">
+                  <h5 class="font-semibold text-guios-text">Subfactores evaluados</h5>
+                  <span class="text-xs text-guios-muted">{{ item.subfactor_count }} subfactor{% if item.subfactor_count != 1 %}es{% endif %}</span>
+                </div>
+                <div class="space-y-2">
+                  {% for subfactor in item.subfactors %}
+                    <div class="flex flex-col gap-2 rounded-lg bg-guios-surface p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div class="text-sm text-guios-text">{{ subfactor.subfactor.name }}</div>
+                      <div class="flex items-center gap-2 text-xs">
+                        <span class="rounded-full bg-white px-2 py-1 font-semibold text-guios-text">{{ subfactor.compliance }}</span>
+                        <span class="text-guios-muted">{{ subfactor.get_compliance_display }}</span>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="rounded-lg border border-guios-border bg-guios-surface p-4">
+                <h5 class="font-semibold text-guios-text">Como se obtuvo la ponderacion media del factor</h5>
+                <p class="mt-2 text-sm text-guios-muted">
+                  Ponderacion media del factor = ({{ item.formula }}) / {{ item.subfactor_count }} = <span class="font-semibold text-guios-orange">{{ ef.mean_weight|floatformat:1 }}</span>
+                </p>
+              </div>
+
+              <div class="rounded-lg border border-guios-border p-4">
+                <h5 class="font-semibold text-guios-text">Regla aplicada</h5>
+                <p class="mt-2 text-sm text-guios-muted">{{ item.rule_text }}</p>
+              </div>
+
+              <div class="rounded-lg border border-guios-border p-4">
+                <h5 class="font-semibold text-guios-text">Explicacion del factor</h5>
+                <p class="mt-2 text-sm text-guios-muted">{{ item.explanation }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endwith %}
+{% endfor %}
 {% endblock %}
 

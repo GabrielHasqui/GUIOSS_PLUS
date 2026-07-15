@@ -5,7 +5,7 @@ from django.utils import timezone
 from apps.literature.models import FactorEvidence, LiteratureDocument, LiteratureQuery, QueryResult
 from apps.users.permissions import is_guios_admin
 
-from .models import Evaluation,EvaluationFactor,EvaluationSubfactor,EvaluationStatus,Factor,ImportanceLevel,Recommendation,SubfactorComplianceLevel
+from .models import Evaluation,EvaluationFactor,EvaluationSubfactor,EvaluationStatus,Factor,FodaLevel,ImportanceLevel,Recommendation,SubfactorComplianceLevel
 
 
 
@@ -216,6 +216,7 @@ def get_result_factors(evaluation):
     return (
         EvaluationFactor.objects.filter(evaluation=evaluation, is_relevant=True)
         .select_related("factor", "factor__dimension")
+        .prefetch_related("evaluation_subfactors__subfactor")
         .order_by("factor__dimension__name", "factor__name")
     )
 
@@ -229,15 +230,119 @@ def get_foda_counts(evaluation_factors):
     }
 
 
+def get_result_explanation_rule(evaluation_factor):
+    if evaluation_factor.selected_scope == "Interno":
+        if evaluation_factor.mean_weight >= 3:
+            return "Factor interno con PM mayor o igual a 3, por lo tanto se clasifica como Fortaleza."
+        return "Factor interno con PM menor a 3, por lo tanto se clasifica como Debilidad."
+
+    if evaluation_factor.selected_scope == "Externo":
+        if evaluation_factor.mean_weight >= 3:
+            return "Factor externo con PM mayor o igual a 3, por lo tanto se clasifica como Oportunidad."
+        return "Factor externo con PM menor a 3, por lo tanto se clasifica como Amenaza."
+
+    return "El alcance del factor no permite explicar la clasificacion."
+
+
+def get_result_summaries(result_factors):
+    summaries = []
+
+    for evaluation_factor in result_factors:
+        subfactors = list(evaluation_factor.evaluation_subfactors.all())
+        values = [subfactor.compliance for subfactor in subfactors]
+        formula = " + ".join(str(value) for value in values)
+        factor_label = evaluation_factor.factor.name
+
+        if evaluation_factor.foda == FodaLevel.FORTALEZA:
+            explanation = (
+                f"{factor_label} se clasifica como Fortaleza porque su alcance es "
+                f"{evaluation_factor.selected_scope.lower()} y su PM es "
+                f"{evaluation_factor.mean_weight:.1f}."
+            )
+        elif evaluation_factor.foda == FodaLevel.OPORTUNIDAD:
+            explanation = (
+                f"{factor_label} se clasifica como Oportunidad porque su alcance es "
+                f"{evaluation_factor.selected_scope.lower()} y su PM es "
+                f"{evaluation_factor.mean_weight:.1f}."
+            )
+        elif evaluation_factor.foda == FodaLevel.DEBILIDAD:
+            explanation = (
+                f"{factor_label} se clasifica como Debilidad porque su alcance es "
+                f"{evaluation_factor.selected_scope.lower()} y su PM es "
+                f"{evaluation_factor.mean_weight:.1f}."
+            )
+        else:
+            explanation = (
+                f"{factor_label} se clasifica como Amenaza porque su alcance es "
+                f"{evaluation_factor.selected_scope.lower()} y su PM es "
+                f"{evaluation_factor.mean_weight:.1f}."
+            )
+
+        summaries.append(
+            {
+                "evaluation_factor": evaluation_factor,
+                "subfactors": subfactors,
+                "formula": formula,
+                "subfactor_count": len(subfactors),
+                "explanation": explanation,
+                "rule_text": get_result_explanation_rule(evaluation_factor),
+            }
+        )
+
+    return summaries
+
+
+def get_recommendation_reason(result_factors, recommendation):
+    if recommendation.code == "C":
+        critical_negative = [
+            evaluation_factor.factor.name
+            for evaluation_factor in result_factors
+            if evaluation_factor.foda in [FodaLevel.DEBILIDAD, FodaLevel.AMENAZA]
+            and evaluation_factor.relative_importance in [
+                ImportanceLevel.IMPORTANTE,
+                ImportanceLevel.FUNDAMENTAL,
+            ]
+        ]
+        return (
+            "La recomendacion C se genera porque existen debilidades o amenazas en "
+            "factores importantes o fundamentales: "
+            + ", ".join(critical_negative)
+            + "."
+        )
+
+    if recommendation.code == "B":
+        optional_negative = [
+            evaluation_factor.factor.name
+            for evaluation_factor in result_factors
+            if evaluation_factor.foda in [FodaLevel.DEBILIDAD, FodaLevel.AMENAZA]
+            and evaluation_factor.relative_importance == ImportanceLevel.OPCIONAL
+        ]
+        return (
+            "La recomendacion B se genera porque existen debilidades o amenazas en "
+            "factores cuya importancia relativa es opcional: "
+            + ", ".join(optional_negative)
+            + "."
+        )
+
+    return (
+        "La recomendacion A se genera porque todos los factores relevantes "
+        "evaluados quedaron clasificados como fortalezas u oportunidades."
+    )
+
+
 def get_result_context_data(evaluation):
-    result_factors = get_result_factors(evaluation)
+    result_factors_queryset = get_result_factors(evaluation)
+    result_factors = list(result_factors_queryset)
+    recommendation = Recommendation.objects.get(evaluation=evaluation)
 
     return {
         "active_nav": "result",
         "evaluation": evaluation,
         "result_factors": result_factors,
-        "recommendation": Recommendation.objects.get(evaluation=evaluation),
-        **get_foda_counts(result_factors),
+        "recommendation": recommendation,
+        "result_summaries": get_result_summaries(result_factors),
+        "recommendation_reason": get_recommendation_reason(result_factors, recommendation),
+        **get_foda_counts(result_factors_queryset),
     }
 
 
