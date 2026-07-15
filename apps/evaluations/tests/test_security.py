@@ -15,6 +15,7 @@ from apps.evaluations.models import (
     Scope,
     Subfactor,
 )
+from apps.users.models import UserRole
 
 
 class EvaluationInputSecurityTests(TestCase):
@@ -25,6 +26,14 @@ class EvaluationInputSecurityTests(TestCase):
             password="SecurePassword123!",
         )
         self.client.force_login(self.user)
+        self.admin = get_user_model().objects.create_user(
+            username="secure.admin",
+            email="secure-admin@example.com",
+            password="SecurePassword123!",
+            is_staff=True,
+        )
+        self.admin.profile.role = UserRole.ADMIN
+        self.admin.profile.save(update_fields=["role", "updated_at"])
 
     def test_create_evaluation_rejects_unknown_source(self):
         response = self.client.post(
@@ -314,3 +323,52 @@ class EvaluationInputSecurityTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(response.json()["ok"])
         self.assertEqual(evaluation_subfactor.compliance, 1)
+
+    def test_evaluator_cannot_reopen_completed_evaluation(self):
+        evaluation = Evaluation.objects.create(
+            software_name="Closed app",
+            context="Test",
+            created_by=self.user,
+            status=EvaluationStatus.COMPLETED,
+        )
+        Recommendation.objects.create(
+            evaluation=evaluation,
+            code="A",
+            text="Resultado previo",
+        )
+
+        response = self.client.post(
+            reverse("reopen_evaluation", args=[evaluation.pk]),
+        )
+
+        evaluation.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(evaluation.status, EvaluationStatus.COMPLETED)
+        self.assertTrue(Recommendation.objects.filter(evaluation=evaluation).exists())
+        self.assertIsNone(evaluation.reopened_by)
+
+    def test_admin_can_reopen_completed_evaluation(self):
+        evaluation = Evaluation.objects.create(
+            software_name="Closed app",
+            context="Test",
+            created_by=self.user,
+            status=EvaluationStatus.COMPLETED,
+        )
+        Recommendation.objects.create(
+            evaluation=evaluation,
+            code="B",
+            text="Resultado previo",
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(
+            reverse("reopen_evaluation", args=[evaluation.pk]),
+        )
+
+        evaluation.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("factors", args=[evaluation.pk]))
+        self.assertEqual(evaluation.status, EvaluationStatus.FACTORS_READY)
+        self.assertEqual(evaluation.reopened_by, self.admin)
+        self.assertEqual(evaluation.reopen_reason, "")
+        self.assertFalse(Recommendation.objects.filter(evaluation=evaluation).exists())

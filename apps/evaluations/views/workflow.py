@@ -5,9 +5,11 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
+from apps.users.permissions import is_guios_admin
+
 from ..models import EvaluationStatus
 from ..selectors import get_evaluation,get_factor_name_for_evaluation_factor,get_factors_context_data,get_relevant_factors,get_result_context_data,get_selected_relevant_factor,get_subfactors_context_data,has_incomplete_relevant_subfactors
-from ..services import evaluation_has_relevant_factors,initialize_relevant_subfactors,save_factor_decision_importance,save_single_subfactor_compliance,save_subfactor_compliance,update_recommendation
+from ..services import evaluation_has_relevant_factors,initialize_relevant_subfactors,reopen_completed_evaluation,save_factor_decision_importance,save_single_subfactor_compliance,save_subfactor_compliance,update_recommendation
 
 @login_required
 def factors(request, evaluation_id):
@@ -114,6 +116,34 @@ def save_subfactor(request, evaluation_id):
 
 
 @login_required
+@require_POST
+def reopen_evaluation(request, evaluation_id):
+    evaluation = get_evaluation(evaluation_id, request.user)
+
+    if not is_guios_admin(request.user):
+        messages.warning(
+            request,
+            "Solo un administrador puede reabrir una evaluacion completada.",
+        )
+        return redirect("result", evaluation_id=evaluation.pk)
+
+    try:
+        reopen_completed_evaluation(
+            evaluation,
+            request.user,
+        )
+    except ValidationError as exc:
+        messages.error(request, exc.messages[0])
+        return redirect("result", evaluation_id=evaluation.pk)
+
+    messages.success(
+        request,
+        "Evaluacion reabierta. Ya puedes ajustar factores y subfactores.",
+    )
+    return redirect("factors", evaluation_id=evaluation.pk)
+
+
+@login_required
 def result(request, evaluation_id):
     evaluation = get_evaluation(evaluation_id, request.user)
     relevant_factors = get_relevant_factors(evaluation)
@@ -156,5 +186,8 @@ def result(request, evaluation_id):
     return render(
         request,
         "evaluations/workflow/result.html",
-        get_result_context_data(evaluation),
+        {
+            **get_result_context_data(evaluation),
+            "can_reopen_evaluation": is_guios_admin(request.user),
+        },
     )

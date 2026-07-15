@@ -41,7 +41,7 @@
     </div>
   </div>
 
-  <form method="post">
+  <form id="subfactors-form" method="post">
     {% csrf_token %}
     <input type="hidden" data-subfactor-save-url value="{% url 'subfactor_save' evaluation.id %}">
     <div class="overflow-hidden rounded-lg border border-guios-border bg-white shadow-sm">
@@ -148,7 +148,7 @@
               </span>
             {% endif %}
             {% if evaluation.status != "completed" and all_subfactors_complete %}
-              <button class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" type="submit" formaction="{% url 'result' evaluation.id %}" formmethod="post" data-continue-button>
+              <button class="rounded-md bg-guios-orange px-6 py-2 text-white hover:opacity-90" data-continue-button data-modal-open="confirm-subfactors-step" type="button">
                 Continuar al Paso 3
               </button>
             {% elif evaluation.status != "completed" %}
@@ -161,6 +161,25 @@
       </div>
     </div>
   </form>
+
+  {% if evaluation.status != "completed" %}
+    <div id="confirm-subfactors-step" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div class="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl">
+        <div class="border-b border-guios-border bg-guios-navy px-5 py-4">
+          <h3 class="text-lg font-semibold text-white">Confirmar avance</h3>
+          <p class="mt-1 text-sm text-white/80">Los cambios realizados en este paso se guardarán antes de continuar.</p>
+        </div>
+        <div class="flex justify-end gap-3 p-5">
+          <button class="rounded-md border border-guios-border px-5 py-2 text-guios-text hover:bg-gray-100" data-modal-close="confirm-subfactors-step" type="button">
+            Cancelar
+          </button>
+          <button class="rounded-md bg-guios-orange px-5 py-2 text-white hover:opacity-90" form="subfactors-form" formaction="{% url 'result' evaluation.id %}" formmethod="post" type="submit">
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 </div>
 
 {% endblock %}

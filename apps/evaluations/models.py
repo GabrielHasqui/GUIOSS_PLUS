@@ -140,6 +140,15 @@ class Evaluation(models.Model):
         on_delete=models.PROTECT,
         related_name="evaluations",
     )
+    reopened_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.PROTECT,
+        related_name="reopened_evaluations",
+        null=True,
+        blank=True,
+    )
+    reopened_at = models.DateTimeField(null=True, blank=True)
+    reopen_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

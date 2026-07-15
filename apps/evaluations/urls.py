@@ -10,6 +10,7 @@ urlpatterns = [
     path('evaluations/<int:evaluation_id>/factors/', views.factors, name='factors'),
     path('evaluations/<int:evaluation_id>/subfactors/', views.subfactors, name='subfactors'),
     path('evaluations/<int:evaluation_id>/subfactors/save/', views.save_subfactor, name='subfactor_save'),
+    path('evaluations/<int:evaluation_id>/reopen/', views.reopen_evaluation, name='reopen_evaluation'),
     path('evaluations/<int:evaluation_id>/result/', views.result, name='result'),
     path('evaluations/<int:evaluation_id>/history/', views.history, name='history'),
 ]

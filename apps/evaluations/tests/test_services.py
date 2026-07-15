@@ -11,6 +11,7 @@ from apps.evaluations.models import (
     Factor,
     FodaLevel,
     ImportanceLevel,
+    Recommendation,
     Scope,
     Subfactor,
     SubfactorComplianceLevel,
@@ -21,6 +22,7 @@ from apps.evaluations.services import (
     classify_foda,
     initialize_relevant_subfactors,
     is_relevant,
+    reopen_completed_evaluation,
     save_factor_decision_importance,
     save_single_subfactor_compliance,
     save_subfactor_compliance,
@@ -190,3 +192,25 @@ class OriginalGuiosSubfactorWorkflowTests(TestCase):
         subfactor.refresh_from_db()
         self.assertIsNone(self.evaluation_factor.decision_maker_importance)
         self.assertEqual(subfactor.compliance, SubfactorComplianceLevel.NO_CUMPLE)
+
+    def test_reopen_completed_evaluation_clears_recommendation_and_tracks_reopen_info(self):
+        evaluation = self.evaluation_factor.evaluation
+        evaluation.status = EvaluationStatus.COMPLETED
+        evaluation.save(update_fields=["status", "updated_at"])
+        Recommendation.objects.create(
+            evaluation=evaluation,
+            code="A",
+            text="Resultado previo",
+        )
+
+        reopen_completed_evaluation(
+            evaluation,
+            self.user,
+        )
+
+        evaluation.refresh_from_db()
+        self.assertEqual(evaluation.status, EvaluationStatus.FACTORS_READY)
+        self.assertEqual(evaluation.reopened_by, self.user)
+        self.assertEqual(evaluation.reopen_reason, "")
+        self.assertIsNotNone(evaluation.reopened_at)
+        self.assertFalse(Recommendation.objects.filter(evaluation=evaluation).exists())

@@ -153,6 +153,26 @@ def create_evaluation_with_sources(user, software_name, context, description, se
     }
 
 
+def reopen_completed_evaluation(evaluation, reopened_by):
+    if evaluation.status != EvaluationStatus.COMPLETED:
+        raise ValidationError("Solo se pueden reabrir evaluaciones completadas.")
+
+    Recommendation.objects.filter(evaluation=evaluation).delete()
+    evaluation.status = EvaluationStatus.FACTORS_READY
+    evaluation.reopened_by = reopened_by
+    evaluation.reopened_at = timezone.now()
+    evaluation.reopen_reason = ""
+    evaluation.save(
+        update_fields=[
+            "status",
+            "reopened_by",
+            "reopened_at",
+            "reopen_reason",
+            "updated_at",
+        ]
+    )
+
+
 def update_evaluation_factor_relative_importance(evaluation_factor):
     relative_importance = calculate_relative_importance(
         evaluation_factor.suggested_importance,

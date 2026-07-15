@@ -12,12 +12,17 @@
         Clasificacion de Fortalezas, Oportunidades, Debilidades y Amenazas, y recomendacion sobre la adopcion FLOSS.
       </p>
     </div>
-    <a
-      class="inline-flex items-center justify-center rounded-md bg-guios-orange px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-      href="{% url 'evaluation_report_pdf' evaluation.id %}"
-    >
-      Exportar PDF
-    </a>
+    {% if can_reopen_evaluation %}
+      <form class="mt-2 md:mt-4" method="post" action="{% url 'reopen_evaluation' evaluation.id %}">
+        {% csrf_token %}
+        <button
+          class="inline-flex items-center justify-center rounded-md bg-guios-orange px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          type="submit"
+        >
+          Reabrir evaluacion
+        </button>
+      </form>
+    {% endif %}
   </div>
 
   <div class="mb-4 rounded-lg border border-guios-border bg-white p-5 shadow-sm">
@@ -53,11 +58,15 @@
       <div>
         <h3 class="mb-2 text-lg font-semibold text-guios-text">Recomendacion {{ recommendation.code }}</h3>
         <p class="text-sm leading-relaxed text-guios-muted">{{ recommendation.text }}</p>
-        <div class="mt-3 rounded-lg border border-guios-border bg-guios-surface p-3 text-sm text-guios-text">
-          <span class="font-semibold">Por que se genero este resultado:</span>
-          {{ recommendation_reason }}
-        </div>
       </div>
+    </div>
+    <div class="mt-4 flex justify-end border-t border-guios-border pt-4">
+      <a
+        class="inline-flex items-center justify-center rounded-md bg-guios-orange px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        href="{% url 'evaluation_report_pdf' evaluation.id %}"
+      >
+        Exportar PDF
+      </a>
     </div>
   </section>
 
@@ -105,7 +114,7 @@
             <th class="px-4 py-3 text-center font-medium">
               <span class="cursor-help" title="Fortalezas, oportunidades, debilidades y amenazas" aria-label="Fortalezas, oportunidades, debilidades y amenazas">FODA</span>
             </th>
-            <th class="px-4 py-3 text-center font-medium">Explicacion</th>
+            <th class="px-4 py-3 text-center font-medium">Ver detalle</th>
           </tr>
         </thead>
         <tbody>

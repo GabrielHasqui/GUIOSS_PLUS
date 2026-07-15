@@ -292,44 +292,6 @@ def get_result_summaries(result_factors):
     return summaries
 
 
-def get_recommendation_reason(result_factors, recommendation):
-    if recommendation.code == "C":
-        critical_negative = [
-            evaluation_factor.factor.name
-            for evaluation_factor in result_factors
-            if evaluation_factor.foda in [FodaLevel.DEBILIDAD, FodaLevel.AMENAZA]
-            and evaluation_factor.relative_importance in [
-                ImportanceLevel.IMPORTANTE,
-                ImportanceLevel.FUNDAMENTAL,
-            ]
-        ]
-        return (
-            "La recomendacion C se genera porque existen debilidades o amenazas en "
-            "factores importantes o fundamentales: "
-            + ", ".join(critical_negative)
-            + "."
-        )
-
-    if recommendation.code == "B":
-        optional_negative = [
-            evaluation_factor.factor.name
-            for evaluation_factor in result_factors
-            if evaluation_factor.foda in [FodaLevel.DEBILIDAD, FodaLevel.AMENAZA]
-            and evaluation_factor.relative_importance == ImportanceLevel.OPCIONAL
-        ]
-        return (
-            "La recomendacion B se genera porque existen debilidades o amenazas en "
-            "factores cuya importancia relativa es opcional: "
-            + ", ".join(optional_negative)
-            + "."
-        )
-
-    return (
-        "La recomendacion A se genera porque todos los factores relevantes "
-        "evaluados quedaron clasificados como fortalezas u oportunidades."
-    )
-
-
 def get_result_context_data(evaluation):
     result_factors_queryset = get_result_factors(evaluation)
     result_factors = list(result_factors_queryset)
@@ -341,7 +303,6 @@ def get_result_context_data(evaluation):
         "result_factors": result_factors,
         "recommendation": recommendation,
         "result_summaries": get_result_summaries(result_factors),
-        "recommendation_reason": get_recommendation_reason(result_factors, recommendation),
         **get_foda_counts(result_factors_queryset),
     }
 
